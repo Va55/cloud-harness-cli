@@ -7,6 +7,21 @@ safety model.*
 
 ---
 
+## The framing: the harness contains no LLM
+
+There is no model, no prompt and no API key inside this project.
+Whether it behaves as a **tool** or as an **assistant** is decided by
+what you attach to it:
+
+| Mode | Who drives it | Deterministic | Can change AWS |
+|---|---|---|---|
+| Plain CLI | you | yes | yes (`--yes`) |
+| `harness ask` | you, in prose | **yes** — router over real commands only | yes (`--yes`) |
+| CLI + MCP client with a model | the model | no — the model chooses | **no** — read + dry-run only |
+
+So the assistant is the *least* privileged way to use the harness. That
+is the point of the MCP surface being a strict subset of the CLI.
+
 ## The options at a glance
 
 | # | Interface | LLM? | Best for |

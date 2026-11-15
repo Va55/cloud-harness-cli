@@ -42,6 +42,23 @@ Both surfaces call the same plugin methods. The MCP surface is
 deliberately the stricter subset of the CLI — see
 [Safety model](#safety-model) for why.
 
+### Tool, assistant, or both?
+
+The harness ships no model, no prompt and no API key. Whether it acts
+as a tool or as an assistant depends entirely on what you attach to it:
+
+| Mode | Who drives it | Deterministic | Can change AWS |
+|---|---|---|---|
+| **Plain CLI** | you — terminal, script, cron | yes | yes (`--yes`) |
+| **`harness ask "…"`** | you, in prose | **yes** — a router that can only select commands which exist, and refuses when arguments are missing | yes (`--yes`; dry-run by default) |
+| **CLI + MCP client with a model** | the model, through 24 typed tools | no — the model chooses | **no** — read and dry-run only |
+
+Attaching an MCP client that has an LLM is what turns the same tool
+into an AWS assistant: prose in, tool calls out. Note the direction —
+the assistant gets *fewer* permissions than the operator, not more.
+`harness ask` is the no-LLM middle ground: natural language in, but a
+deterministic router with no ability to invent a command.
+
 ### As a tool — the CLI
 
 Twenty-five commands across eleven plugins. Installed above, it works
