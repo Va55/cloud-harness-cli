@@ -1,132 +1,172 @@
-# Project Motivation
+# Motivation
 
-> **The console is a place you navigate. The harness is a verb you type.**
-> You cannot get lost where there is no geography.
-
-> Why aws-harness exists. Read this before the architecture doc.
-
----
-
-## The Problem
-
-The target user of this harness **knows AWS concepts** — IAM policies, VPCs,
-S3 lifecycles are not the problem. **The AWS web console is the problem.**
-
-The console is a *place*: a 200+ service maze with a left-nav that regroups
-every few months, a region selector that silently follows you into the wrong
-empty screen, an account switcher that costs a sign-out/sign-in round trip,
-and a different UI vocabulary for every service. The result is getting lost
-navigating it — not because of missing AWS knowledge, but because the console
-imposes **geography** on operations that should be **verbs**.
-
-That distinction matters for how the problem should be solved: this user
-does not need the concepts explained, does not need a guided wizard, and
-does not need a simpler mental model. They need the same operations
-expressed as repeatable commands that behave identically across accounts,
-regions and redesigns.
+This document states the problem aws-harness addresses, the design
+response it implements, and the criteria by which the result should be
+judged. Architectural detail lives in `docs/architecture.md`; the
+development record is in `PROJECT_LOG.md`.
 
 ---
 
-## The Thesis
+## The problem
 
-A command is a stable interface; a screen is a moving one. Expressed as a
-verb, an operation can be typed, scripted, versioned and audited. Expressed
-as a place, every UI redesign is a regression to your muscle memory.
+The AWS web console is an interface optimised for exploration. It is
+adequate when an operation is unfamiliar: wizards guide first-time
+setup, resource graphs explain relationships, policy editors validate
+syntax, documentation is one click away.
 
-`harness ec2 list-instances --all-accounts --all-regions` is the same command
-next week and next year. It replaces a click-path that differs in every
-service, changes with console redesigns, and cannot be repeated across twenty
-accounts and eleven regions without an hour of sign-ins, selectors and tab
-sprawl.
+It is a poor interface for work that is already understood and must be
+repeated — the routine question "which instances, in which accounts, in
+which regions, and what do they cost" — for four structural reasons.
 
----
+**1. Navigation state is implicit.** Region and account are selection
+state held by the interface, not arguments in a request. A region
+selector that persists across pages turns a wrong click into an empty
+screen that is indistinguishable from an account that genuinely has no
+resources. An account switch costs a sign-out and sign-in, or a
+role-assumption round trip that resets the context of the task. The
+operator carries this state in their head, and it is the main source of
+wrong conclusions drawn from a correct-looking screen.
 
-## Friction the Harness Eliminates
+**2. Vocabulary differs per service.** Every service names its primary
+objects, its list view, its filter model and its detail page
+differently. Knowledge does not transfer: familiarity with the EC2
+console does not indicate where IAM access-key age is displayed, or how
+S3 versioning is toggled.
 
-| Console problem | Harness answer |
-|---|---|
-| **Left-nav sprawl** — 200+ services, menu regroups, re-learning where things live | `harness <service> <verb>` — the command *is* the location; it never moves |
-| **Silent region state** — region selector follows you; empty screens look like missing resources | Region is explicit per call: `--region` or `--all-regions`; no silent empty screens |
-| **Account switching dance** — sign out, sign in, assume role, start over | `--account production` / `--all-accounts` — one flag, same mental context |
-| **Inconsistent consoles** — every service has a different layout, breadcrumb, and search | One vocabulary everywhere; every plugin answers the same verbs |
-| **"Which screen am I on?"** — broken breadcrumbs, old→new console redirects, tab multiplication | Command history *is* the breadcrumb trail; `↑` replays where you were |
-| **20-tab cross-referencing** — "which instances, in which accounts, with which SGs?" | `harness inventory collect --all-accounts` then query the local store |
-| **Silent partial failure** — dismissed error banners, spinners that never load | `PartialResult` prints every failed account with a reason; exit codes feed scripts |
+**3. The interface moves.** Left navigation is regrouped, consoles are
+migrated from old to new layouts, and controls are relocated. Each
+redesign is a small cost paid by every user, repeatedly, and it
+invalidates whatever learned path existed before.
 
----
+**4. Work does not compose.** Console output is a rendered page. It
+cannot be filtered across twenty accounts in one pass, cannot be
+diffed against last week, cannot be scheduled, and cannot be attached
+to a change record. Cross-account questions — "which instances in every
+account have a public IP" — become twenty tab sets and manual
+comparison.
 
-## What This Project Is NOT
-
-Honesty about scope, per the expert-reviewed design:
-
-- **Not a console replacement.** The console remains better for first-time
-  setup, visual debugging, and discovery (guided wizards, resource graphs,
-  doc links). The harness is for the recurring, known-what-you-want work.
-- **Not a conceptual tutor.** It does not reduce the cognitive load of
-  *understanding* IAM evaluation or VPC routing — only the load of
-  *navigating* the UI. For the target user above that is the right trade:
-  the concepts are already in hand.
-- **Not a provisioning tool (Phase 1).** Mutating infrastructure is
-  delegated to Terraform/CDK; the harness reads state, runs safe ops, and
-  scaffolds IaC. Deliberate — building a fifth IaC engine would fail.
-- **Not friction-free itself.** A CLI has its own learning cost. The
-  counterweights: one command vocabulary for all services, JSON output for
-  scripting, `doctor` for self-diagnosis, and honest stubs that say
-  "not yet implemented" instead of pretending.
+The consequence is not a knowledge gap. The concepts are the part that
+works; the interface is the part that costs time and produces error.
 
 ---
 
-## The Bridge: Deep Links
+## The design response
 
-Console-native users should not be forced to choose sides.
-`harness console <service> [resource-id] --region <r>` prints — or opens,
-with `--open` — the **direct deep-link URL** to a specific resource in the
-console:
+**Model operations as verbs with explicit state, not as places with
+implicit state.**
 
-- Navigate by command — never wander.
-- Jump to the one screen where the console genuinely wins
-  (a graph, a policy editor with validation).
-- Zero browsing to get there.
+A command is a stable interface: it can be typed, scripted, versioned,
+diffed and audited. A screen is a moving one: its layout is a detail
+that changes without notice.
 
-This is the best of both: the terminal as the map, the console as the
-zoomed-in view.
+That single decision determines the rest of the design.
 
-## The Second Layer: Conversational Interface
+- **Explicit targeting.** Account and region are arguments —
+  `--account`, `--all-accounts`, `--region`, `--all-regions` — never
+  inherited selection state. A query that spans accounts says so, and
+  its output says which account produced which row.
+- **One vocabulary.** Every plugin answers the same verbs: list,
+  describe, audit, and a small set of safe operations. Learning the
+  harness once is learning it for all services.
+- **Composable output.** Tables for reading, `--output json` for
+  scripting, meaningful exit codes, and a report of every account that
+  failed and why — so a partial result is never mistaken for a complete
+  one.
+- **Stable under UI change.** The command is written once and keeps
+  working when the console is redesigned.
 
-For Pi / Claude Code / Hermes-style interaction, the harness exposes its
-plugin registry as an **MCP server** (`harness serve-mcp`, 24 typed tools)
-— so any MCP-capable client becomes a natural-language interface over the
-same tools, under the same safety gates: read and dry-run only, no path to
-a real mutation, every call audited. Wiring per client is in
-`docs/mcp-clients.md`.
-
-`harness ask` covers the same ground without a model: natural language in,
-but a deterministic router that can only select commands which exist.
-
-Same principle as deep links: **typed verbs are the map; conversation is
-a co-pilot — never a replacement for the deterministic CLI.**
-Full design: `docs/architecture.md` §13.
+`harness ec2 list-instances --all-accounts --all-regions` is the same
+command next week and next year.
 
 ---
 
-## Success Criteria
+## Console friction and the design response
 
-The project justifies itself when, for the target user:
+| Console friction | Mechanism | Design response |
+|---|---|---|
+| Left-nav sprawl: 200+ services, regrouping, re-learning where things live | Navigation is a location that must be found | `harness <service> <verb>` — the command names the operation, and does not move |
+| Region state follows the user; empty screens look like absent resources | Implicit selection state | Region is explicit per call: `--region` or `--all-regions` |
+| Account switching requires sign-out/sign-in or role reassumption | Identity and context are per-session | `--account` / `--all-accounts`, one invocation |
+| Each service has its own layout, breadcrumb and search model | No shared vocabulary | One vocabulary across all plugins |
+| Broken breadcrumbs, old→new console redirects, tab multiplication | No durable record of position | Shell history is the record; commands are re-runnable |
+| Cross-account questions require parallel browsing | Output is rendered, not queryable | `inventory collect --all-accounts`, then query the local store |
+| Errors appear as dismissible banners; partial failures look like empty results | Failures are visual, not mechanical | `PartialResult` lists each failed account and reason; exit codes are non-zero |
 
-1. The **weekly "what exists where" sweep** — accounts × regions × services —
-   is one command (`inventory collect` + `summarize`) instead of an hour of
-   console clicking.
+---
+
+## Scope
+
+Stated explicitly, because overstating scope is the usual failure mode
+of tooling like this.
+
+- **Not a console replacement.** The console remains the better tool
+  for first-time setup, visual debugging, resource graphs and
+  documentation. The harness covers recurring, well-understood work.
+- **Not a conceptual tutor.** It does not reduce the effort of
+  understanding IAM evaluation or VPC routing. It reduces the effort of
+  *navigating* to the answer.
+- **Not a provisioning tool.** Creation, deletion and drift management
+  belong to Terraform or CDK. The harness reads state, performs a small
+  set of safe operations, and stays out of infrastructure definition.
+- **Not free of learning cost.** A CLI has its own cost. The
+  counterweights are a single vocabulary, JSON output, `doctor` for
+  self-diagnosis, and honest "not implemented" responses instead of
+  silent stubs.
+
+---
+
+## Interoperability: deep links
+
+The console is the correct destination for visual work — a resource
+graph, a policy editor with validation, a first-time wizard.
+`harness console <service> [resource-id] --region <region>` prints, or
+opens with `--open`, the direct URL for a specific resource.
+
+The intent is not to prevent console use, but to remove the browsing
+required to reach a specific screen: the terminal locates the resource,
+the console renders it.
+
+---
+
+## Interoperability: MCP
+
+The same plugin registry is exposed as an MCP server
+(`harness serve-mcp`, 24 typed tools), so an MCP-capable client can
+query the harness in natural language. The server is deliberately
+narrower than the CLI:
+
+- read and dry-run only — there is no MCP path to a real mutation;
+- results capped at 50 rows;
+- every call recorded in the audit trail as `harness:mcp`.
+
+`harness ask` provides the same convenience without a model: natural
+language input, resolved by a deterministic router that can only select
+commands which exist, with mutations routed through `--dry-run` first.
+
+Client wiring is in `docs/mcp-clients.md`; the rationale for the
+permission split is in `docs/architecture.md` §13.
+
+---
+
+## Evaluation
+
+The project justifies its existence when the following hold in routine
+use.
+
+1. **The periodic estate sweep** — accounts × regions × services — is
+   one command (`inventory collect`, then `inventory summarize`)
+   instead of a manual pass across consoles.
 2. **No console session is opened to answer a question the harness can
-   answer** — the console is reserved for the visual-only work: a resource
-   graph, a policy editor with validation, first-time setup.
-3. **Every failed account in a multi-account call reports its reason** —
-   no silent SCP denials hiding behind a dismissed banner.
+   answer.** The console is reserved for visual work.
+3. **Every failed account in a multi-account call reports its reason.**
+   No partial result is silently presented as a complete one.
 
-Criteria 1 and 3 are implemented and exercised against live AWS; criterion
-2 is a usage habit rather than a feature, and it is the one that decides
-whether the project was worth building. The build order that led here is in
-`PROJECT_LOG.md`, phase by phase.
+Criteria 1 and 3 are implemented and exercised against live AWS.
+Criterion 2 is a usage outcome rather than a feature, and it is the one
+that determines whether the project was worth building.
 
 ---
 
-*Related: `docs/architecture.md` (v3.0 design), `PROJECT_LOG.md` (full history, audit, decisions).*
+*Related: `docs/architecture.md` (design and decisions) ·
+`docs/user-manual.md` (commands) · `PROJECT_LOG.md` (development
+record and rationale).*
