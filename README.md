@@ -169,6 +169,44 @@ ability to mutate.
 - **One capability set, two surfaces.** The CLI and the MCP server call
   the same plugin methods; the MCP surface is the stricter subset.
 
+## Extending: a service is one file and one entry point
+
+Every service is a plugin behind a deliberately small contract
+(`harness_plugins/base.py`):
+
+1. subclass `BasePlugin`;
+2. declare `CAPABILITIES` — a frozen dataclass naming the service, which
+   verbs it supports (`supports_read`, `supports_safe_ops`), whether it
+   is global rather than regional, and its rate limits as
+   `(api, transactions_per_second)` pairs;
+3. return a Typer sub-app from `create_app()`;
+4. implement `list_resources()` and `get_resource()`.
+
+Optional methods unlock more: `describe`, `audit`, `safe_op`,
+`dry_run_simulate`, `cost_info`.
+
+Registration is an entry point, not an edit to the core:
+
+```toml
+[project.entry-points."cloud_harness.plugins"]
+my_service = "my_package.plugin:MyServicePlugin"
+```
+
+Because discovery goes through `importlib.metadata`, a plugin can ship as
+a separate installed package — no fork, no central registry file, no
+import wiring. The harness finds it on the next run.
+
+What a plugin inherits without writing any of it: account and region
+fan-out through the thread pool, per-API rate limiting, credential
+resolution and role assumption, `--dry-run` / `--output` / `--quiet`
+plumbing, partial-failure reporting with meaningful exit codes, the
+`read_only` choke point, and the audit trail.
+
+One deliberate exception: the MCP surface is **not** generated from the
+plugin registry. Each tool is declared explicitly so the model-facing
+surface stays small, typed and reviewable. Adding a plugin gives you a
+CLI immediately; exposing it to a model is a separate, considered step.
+
 ## Configuration
 
 `~/.config/aws-harness/config.yaml` — accounts, businesses, regions,

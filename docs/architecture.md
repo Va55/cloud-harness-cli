@@ -404,7 +404,7 @@ class BasePlugin:
 **Plugin registry (entry points, NOT filesystem scanning):**
 ```toml
 # pyproject.toml
-[project.entry-points."aws_harness.plugins"]
+[project.entry-points."cloud_harness.plugins"]
 iam = "harness_plugins.iam.plugin:IAMPlugin"
 ec2 = "harness_plugins.ec2.plugin:EC2Plugin"
 s3 = "harness_plugins.s3.plugin:S3Plugin"
@@ -1316,7 +1316,7 @@ dev = [
 harness = "harness_cli.main:main"
 
 # Plugin entry points
-[project.entry-points."aws_harness.plugins"]
+[project.entry-points."cloud_harness.plugins"]
 iam = "harness_plugins.iam.plugin:IAMPlugin"
 ec2 = "harness_plugins.ec2.plugin:EC2Plugin"
 s3 = "harness_plugins.s3.plugin:S3Plugin"

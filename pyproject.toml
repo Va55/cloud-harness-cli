@@ -45,7 +45,7 @@ dev = [
 [project.scripts]
 harness = "harness_cli.main:main"
 
-[project.entry-points."aws_harness.plugins"]
+[project.entry-points."cloud_harness.plugins"]
 iam = "harness_plugins.iam.plugin:IAMPlugin"
 ec2 = "harness_plugins.ec2.plugin:EC2Plugin"
 s3 = "harness_plugins.s3.plugin:S3Plugin"

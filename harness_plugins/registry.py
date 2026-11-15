@@ -1,7 +1,7 @@
 """
 Plugin discovery via Python entry points.
 
-Discovers plugins registered in pyproject.toml under [project.entry-points."aws_harness.plugins"].
+Discovers plugins registered in pyproject.toml under [project.entry-points."cloud_harness.plugins"].
 Validates capabilities and command name uniqueness at startup.
 """
 
@@ -12,7 +12,7 @@ from typing import Any
 class PluginRegistry:
     """Discover and validate plugins via entry points."""
 
-    GROUP = "aws_harness.plugins"
+    GROUP = "cloud_harness.plugins"
 
     def __init__(self):
         self._plugins: dict[str, Any] = {}
