@@ -1,0 +1,102 @@
+# AWS Harness Config Template
+# Copy to ~/.config/aws-harness/config.yaml and customize.
+
+# Account definitions
+accounts:
+  # Auto-discover from Organizations API (primary source)
+  discovery: organizations
+
+  # Manual overrides (for accounts not yet in Org or staging)
+  manual:
+    # - id: "000000000000"
+    #   name: standalone
+    #   profile: standalone
+    #   regions: [us-east-1]
+
+  # ── Multi-business (one user, several businesses) ─────────────
+  # Each business has its OWN credentials (profile) — mirroring the
+  # console workflow: log in once per business, switch roles within it.
+  # Discovery runs per business with that business's profile; role
+  # templates expand {account_id} within the business.
+  # Use:  harness --business acme iam list-users --account prod
+  #       harness --business acme --all-accounts ec2 list-instances
+  businesses:
+    - name: acme
+      profile: acme              # that business's own credentials
+      role_arn: "arn:aws:iam::{account_id}:role/OpsAccess"
+      external_id: harness-acme  # cross-account confused-deputy guard
+      read_only: false           # PRODUCTION SAFETY LOCK: true =
+                                 # mutations refused for the whole
+                                 # business, in code (see docs/
+                                 # production-rollout-plan.md)
+      discovery: organizations  # or: manual (+ accounts: below)
+      default_account: prod     # `--business acme` with no --account
+      # accounts:               # manual mode only
+      #   - id: "111111111111"
+      #     name: prod
+      #     regions: [us-east-1, eu-west-1]
+    # - name: globex
+    #   profile: globex
+    #   ...
+
+  # Default settings for all accounts
+  defaults:
+    profile: default              # AWS CLI profile
+    # AssumeRole ARN. Use {account_id} to expand per discovered account —
+    # this is how org accounts get cross-account access without a
+    # per-account config entry:
+    #   role_arn: "arn:aws:iam::{account_id}:role/HarnessAccess"
+    # Leave null for single-account use (profile credentials directly).
+    role_arn: null
+    external_id: null             # External ID for cross-account security
+    session_tags:
+      harness_user: "$USER"
+    regions: null                 # Override regions for all accounts
+
+# Execution settings
+execution:
+  max_workers: 50                 # Max total threads
+  per_account_limit: 10           # Max concurrent ops per account
+  per_api_limit: 5                # Max concurrent calls per API per region
+  rate_limit_rps: 10.0            # Global default rate limit
+  session_cache_ttl: 3600         # Session cache TTL in seconds
+  credential_cache_ttl: 3600      # Credential cache TTL in seconds
+
+# Output defaults
+output:
+  format: table                   # json|table|yaml|text
+  max_rows: 1000                  # Limit for table output
+  color: auto                     # on|off|auto
+
+# Region configuration
+regions:
+  north_america:
+    primary: us-east-1
+    members: [us-east-1, us-east-2, us-west-1, us-west-2, ca-central-1]
+  europe:
+    primary: eu-west-1
+    members: [eu-west-1, eu-west-2, eu-west-3, eu-central-1, eu-central-2, eu-north-1]
+
+# Cost display defaults (read-only, no backend alerts)
+cost:
+  display_currency: USD
+  period_default: 30d
+
+# Security defaults
+security:
+  max_unused_key_days: 90
+  max_unused_role_days: 180
+  enforce_mfa_for_delete: true
+  production_tag_guard: true
+
+# Inventory storage
+inventory:
+  store: sqlite
+  sqlite_path: ~/.cache/aws-harness/inventory.db
+  retention_days: 90
+
+# Audit trail
+audit:
+  enabled: true
+  sqlite_path: ~/.cache/aws-harness/audit.db
+  retention_days: 365

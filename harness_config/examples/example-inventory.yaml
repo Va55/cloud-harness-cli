@@ -1,0 +1,106 @@
+# AWS Harness config — generated from tests/fixtures/example-accounts.xlsx
+# by scripts/import-accounts-xlsx.py on 2026-11-14
+#
+# TODO before use:
+#   1. Fix each business's `profile:` to match your ~/.aws/credentials
+#      profile names (generated as the business name lowercased).
+#   2. Copy to ~/.config/aws-harness/config.yaml
+#
+# Accounts without role_arn (e.g. the shared login account) are used
+# with their profile's credentials directly.
+
+accounts:
+  discovery: manual
+  businesses:
+  - name: alpha
+    profile: alpha
+    discovery: manual
+    accounts:
+    - id: '100000000001'
+      name: alpha-shared-iac
+      role_arn: null
+    - id: '100000000002'
+      name: alpha-app-dev
+      role_arn: arn:aws:iam::100000000002:role/non-prod-full-admin-trust-role
+    - id: '100000000003'
+      name: alpha-app-prod
+      role_arn: arn:aws:iam::100000000003:role/prod-full-admin-trust-role
+    - id: 000000000982
+      name: alpha-live-iac
+      role_arn: arn:aws:iam::000000000982:role/live-full-admin-trust-role
+    - id: '100000000005'
+      name: alpha-dev-iac
+      role_arn: arn:aws:iam::100000000005:role/dev-full-admin-trust-role
+    - id: '100000000006'
+      name: alpha-network-iac
+      role_arn: arn:aws:iam::100000000006:role/network-full-admin-trust-role
+    - id: '100000000007'
+      name: alpha-audit-iac
+      role_arn: arn:aws:iam::100000000007:role/audit-full-admin-trust-role
+    - id: '100000000008'
+      name: alpha-poc-dev-tmp
+      role_arn: arn:aws:iam::100000000008:role/alpha-poc-full-admin-trust-role
+  - name: beta
+    profile: beta
+    discovery: manual
+    accounts:
+    - id: '100000000009'
+      name: beta-tds
+      role_arn: arn:aws:iam::100000000009:role/beta-tds-full-admin-trust-role
+    - id: '100000000010'
+      name: beta-prod
+      role_arn: arn:aws:iam::100000000010:role/beta-prod-full-admin-trust-role
+    - id: '100000000011'
+      name: beta-com
+      role_arn: arn:aws:iam::100000000011:role/beta-com-full-admin-trust-role
+    - id: '100000000012'
+      name: beta-pocketapp
+      role_arn: arn:aws:iam::100000000012:role/beta-pocketapp-full-admin-trust-role
+    - id: '100000000013'
+      name: beta-sso
+      role_arn: arn:aws:iam::100000000013:role/beta-sso-full-admin-trust-role
+    - id: '100000000014'
+      name: beta-admin
+      role_arn: arn:aws:iam::100000000014:role/beta-admin-full-admin-trust-role
+  - name: gamma
+    profile: gamma
+    discovery: manual
+    accounts:
+    - id: '100000000015'
+      name: gamma-migrations
+      role_arn: arn:aws:iam::100000000015:role/gamma-migrations-full-admin-trust-role
+    - id: '100000000016'
+      name: gamma-root
+      role_arn: arn:aws:iam::100000000016:role/gamma-root-full-admin-trust-role
+    - id: '100000000017'
+      name: gamma-logarchive
+      role_arn: arn:aws:iam::100000000017:role/gamma-logarchive-full-admin-trust-role
+    - id: '100000000018'
+      name: gamma-audit
+      role_arn: arn:aws:iam::100000000018:role/gamma-audit-full-admin-trust-role
+    - id: '100000000019'
+      name: gamma-test
+      role_arn: arn:aws:iam::100000000019:role/gamma-test-full-admin-trust-role
+    - id: '100000000020'
+      name: gamma-test-lab
+      role_arn: arn:aws:iam::100000000020:role/gamma-test-lab-full-admin-trust-role
+    - id: '100000000021'
+      name: gamma-test-2
+      role_arn: arn:aws:iam::100000000021:role/gamma-test-2-full-admin-trust-role
+  - name: delta
+    profile: delta
+    discovery: manual
+    accounts:
+    - id: '100000000022'
+      name: delta-sales-prod
+      role_arn: arn:aws:iam::100000000022:role/delta-sales-prod-full-admin-trust-role
+    - id: '100000000023'
+      name: delta-prod
+      role_arn: arn:aws:iam::100000000023:role/delta-prod-full-admin-trust-role
+  - name: epsilon
+    profile: epsilon
+    discovery: manual
+    accounts:
+    - id: '100000000024'
+      name: epsilon-international
+      role_arn: arn:aws:iam::100000000024:role/epsilon-international-full-admin-trust-role
