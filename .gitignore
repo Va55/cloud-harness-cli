@@ -14,7 +14,7 @@ env/
 
 # AWS Harness — local state (NEVER commit: holds live account IDs,
 # resource inventory and the audit trail)
-.harness/
+.harness
 *.db
 *.db-wal
 *.db-shm
