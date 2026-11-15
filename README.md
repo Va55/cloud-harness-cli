@@ -99,6 +99,9 @@ spawns it as a child process.
 harness serve-mcp                                # JSON-RPC on stdio
 ```
 
+The MCP SDK is an optional extra: `pip install 'cloud-harness-cli[mcp]'`.
+The pin excludes SDK 2.x, whose import path this code does not use.
+
 Client registration — one line each:
 
 | Client | Registration |

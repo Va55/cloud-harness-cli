@@ -361,7 +361,16 @@ def plugins():
 def serve_mcp():
     """MCP server (stdio) — expose the harness to MCP clients
     (pi, Claude Code, VSCode Copilot). See architecture §13 Tier 2."""
-    from harness_cli.mcp_server import serve
+    try:
+        from harness_cli.mcp_server import serve
+    except ImportError as exc:      # optional dependency, absent
+        typer.echo(
+            "The MCP server requires the MCP Python SDK, which is an "
+            "optional dependency.\n\n"
+            "    pip install 'cloud-harness-cli[mcp]'\n\n"
+            f"(import error: {exc})",
+            err=True)
+        raise typer.Exit(2) from exc
     serve()
 
 

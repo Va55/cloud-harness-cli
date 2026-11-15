@@ -33,6 +33,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# The MCP server needs the MCP Python SDK. Pinned below 2.0: this code
+# imports mcp.server.fastmcp, which the 2.x line no longer provides.
+mcp = ["mcp>=1.2,<2"]
+
 dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.24",
