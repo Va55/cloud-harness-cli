@@ -93,4 +93,5 @@ MIT
 ## Documentation
 
 See **docs/user-manual.md** — the user manual, and **docs/production-rollout-plan.md** — the plan to present for production-access approval.
+For MCP clients: **docs/mcp-clients.md** — copy-paste setup for Pi, Hermes, Claude Code and VS Code (24 tools over stdio).
 For AWS-side setup: **docs/harness-needed_aws-roles.md** — every role/user/permission the harness needs, with worked policy examples (read-only, cross-account trust + ExternalId, safe ops, the production double-lock).

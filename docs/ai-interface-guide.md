@@ -60,6 +60,10 @@ v1 — execution stays in the CLI**). The client brings the LLM:
 
 ### The wire-up (same for any client)
 
+*Per-client copy-paste instructions (Pi, Hermes, Claude Code, VS Code,
+Cursor) with verification and troubleshooting: **docs/mcp-clients.md**.*
+
+
 ```bash
 # pi / Claude Code:
 claude mcp add aws-harness -- harness serve-mcp

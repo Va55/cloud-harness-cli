@@ -302,7 +302,8 @@ claude mcp add aws-harness -- harness serve-mcp
 
 *Which brain to attach, how to serve a local model, and the
 data-governance trade-offs — see **docs/ai-interface-guide.md** (the
-consolidated with/without-LLM decision guide).*
+consolidated with/without-LLM decision guide). Per-client setup
+(Pi, Hermes, Claude Code, VS Code): **docs/mcp-clients.md**.*
 
 24 typed tools (no free-form params): whoami, doctor, list_accounts,
 account_regions, console_url, ec2_list_instances/describe,
