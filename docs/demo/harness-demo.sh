@@ -1,5 +1,5 @@
 #!/bin/bash
-# ── AWS HARNESS — LIVE DEMO ────────────────────────────────────
+# ── CLOUD HARNESS CLI — LIVE DEMO ────────────────────────────────────
 # Runs against the real AWS sandbox (all calls READ-ONLY, $0 cost)
 
 B="\033[1;36m"   # banner
@@ -71,9 +71,9 @@ step "7/8 — Security check: network audit (real findings)"
 run harness vpc audit
 
 step "8/8 — The audit trail — every mutation recorded, with attribution"
-echo -e "${Y}\$ sqlite3 ~/.cache/aws-harness/audit.db \"SELECT …\"${N}"
+echo -e "${Y}\$ sqlite3 ~/.cache/cloud-harness/audit.db \"SELECT …\"${N}"
 sleep 0.4
-sqlite3 -column ~/.cache/aws-harness/audit.db \
+sqlite3 -column ~/.cache/cloud-harness/audit.db \
   "SELECT timestamp, source_identity, action, resource_id, dry_run, success
    FROM audit_events ORDER BY rowid"
 echo

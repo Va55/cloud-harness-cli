@@ -107,7 +107,7 @@ def main():
         secret = key["SecretAccessKey"]
 
         # 4. secret → 0600 file, never stdout (the harness convention)
-        secret_dir = Path.home() / ".cache" / "aws-harness" / "credentials"
+        secret_dir = Path.home() / ".cache" / "cloud-harness" / "credentials"
         secret_dir.mkdir(parents=True, exist_ok=True)
         os.chmod(secret_dir, 0o700)
         secret_path = secret_dir / f"{key_id}.secret"
@@ -128,7 +128,7 @@ def main():
     print("""
 Done. Next (the operator side):
     1. Fill ~/.aws/credentials with the profile above
-    2. In ~/.config/aws-harness/config.yaml add the business with
+    2. In ~/.config/cloud-harness/config.yaml add the business with
        read_only: true  ← the production safety lock
     3. Verify:  harness --profile <profile> whoami
     4. Pre-brief the business's monitoring on the harness-* CloudTrail

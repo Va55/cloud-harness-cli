@@ -39,7 +39,7 @@ MCP_AUDIT_ID = "harness:mcp"   # audit principal for MCP-origin actions
 
 mcp = FastMCP(
     "cloud-harness-cli",
-    instructions="AWS management harness: read-only AWS visibility "
+    instructions="Cloud Harness CLI: read-only AWS visibility "
                  "across accounts/businesses/regions + dry-run "
                  "simulations of safe operations. Mutations execute "
                  "via the `harness` CLI, not here.",

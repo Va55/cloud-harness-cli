@@ -1,4 +1,4 @@
-# AWS Harness — User Manual
+# Cloud Harness CLI — User Manual
 
 *Initial release · for the single operator managing many accounts across
 several businesses.*
@@ -36,7 +36,7 @@ pip install -e . --break-system-packages
 #    spreadsheet:
 python3 scripts/import-accounts-xlsx.py \
     ~/Desktop/AWS_ACCOUNTS_AND_ADMIN_ROLES.xlsx \
-    ~/.config/aws-harness/config.yaml
+    ~/.config/cloud-harness/config.yaml
 # then fix the profile: names in the file to match ~/.aws/credentials
 
 # 2. check your identity
@@ -69,7 +69,11 @@ If `whoami` prints your ARN and `doctor` passes, you're ready.
 
 ## 4. The config file
 
-Location: `~/.config/aws-harness/config.yaml` (or pass `--config PATH`).
+Location: `~/.config/cloud-harness/config.yaml` (or pass `--config PATH`).
+
+Earlier builds used a differently named directory. If it is present it
+is still read as a fallback, so an existing installation keeps
+working without a migration step.
 A complete, annotated example is in
 `harness_config/examples/example-inventory.yaml`.
 
@@ -120,7 +124,7 @@ accounts:
                            the harness never silently picks for you
 ```
 
-Environment overrides: `AWS_HARNESS_ACCOUNT`, `AWS_HARNESS_PROFILE`.
+Environment overrides: `CLOUD_HARNESS_ACCOUNT`, `CLOUD_HARNESS_PROFILE`.
 
 ---
 
@@ -234,7 +238,7 @@ harness ec2 stop i-0abc123456789def0 --region eu-west-1        # real
 
 # Rotate a user's keys (secret → 0600 file, never the screen):
 harness iam rotate-keys alice --account prod
-# → Secret written to ~/.cache/aws-harness/credentials/AKIA….secret (0600)
+# → Secret written to ~/.cache/cloud-harness/credentials/AKIA….secret (0600)
 
 # Are backups actually working? (the question that matters)
 harness --all-accounts backup audit
@@ -329,7 +333,7 @@ human CLI actions.
 3. **Every mutating action is audit-logged locally** with your
    attribution:
    ```bash
-   sqlite3 ~/.cache/aws-harness/audit.db \
+   sqlite3 ~/.cache/cloud-harness/audit.db \
      "SELECT timestamp, source_identity, action, resource_id, dry_run
       FROM audit_events ORDER BY timestamp DESC LIMIT 10"
    ```
@@ -346,10 +350,10 @@ human CLI actions.
 
 | Path | Content |
 |---|---|
-| `~/.config/aws-harness/config.yaml` | your config |
-| `~/.cache/aws-harness/inventory.db` | accounts, region cache, inventory snapshots |
-| `~/.cache/aws-harness/audit.db` | audit trail (what you did, when) |
-| `~/.cache/aws-harness/credentials/` | rotated key secrets (0600 files) |
+| `~/.config/cloud-harness/config.yaml` | your config |
+| `~/.cache/cloud-harness/inventory.db` | accounts, region cache, inventory snapshots |
+| `~/.cache/cloud-harness/audit.db` | audit trail (what you did, when) |
+| `~/.cache/cloud-harness/credentials/` | rotated key secrets (0600 files) |
 
 `--refresh` clears the credential and region caches; inventory and
 audit data are kept (retention configurable in config).
@@ -362,7 +366,7 @@ audit data are kept (retention configurable in config).
 |---|---|
 | `The config profile (x) could not be found` | A profile name in your config doesn't match `~/.aws/credentials`. Fix the `profile:` values (§4). |
 | `Account name 'prod' is ambiguous (2 matches in businesses: …)` | Two businesses have an account with that name. Add `--business` or use the 12-digit ID. |
-| `No account specified and no default configured` | Say what you mean: `--account`, `--business X` (needs a `default_account`), or set `AWS_HARNESS_ACCOUNT`. |
+| `No account specified and no default configured` | Say what you mean: `--account`, `--business X` (needs a `default_account`), or set `CLOUD_HARNESS_ACCOUNT`. |
 | `AccessDenied` on every cross-account call | The trust role doesn't allow your profile, or the ExternalId doesn't match. Check `harness account show --account X` (prints the ARN that would be assumed). |
 | `OptInRequired` / `auth failure` noise during a sweep | Use `--refresh` to re-detect enablement, or `--region` for the specific region. Detection is cached 24 h. |
 | `[WARN] Region detection failed` | The account's credentials lack `ec2:DescribeRegions`. The sweep falls back to configured regions. |
@@ -400,7 +404,7 @@ then `pip install .`), with the usual AWS setup
 (`%USERPROFILE%\.aws\credentials` — same profile format). Platform
 notes:
 
-- Paths (`~/.config/aws-harness/`, `~/.cache/aws-harness/`) map to
+- Paths (`~/.config/cloud-harness/`, `~/.cache/cloud-harness/`) map to
   your Windows profile automatically
 - `console --open` uses the default browser via the Windows shell API
 - **One caveat**: the 0600 permission on secret files is a POSIX

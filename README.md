@@ -209,7 +209,7 @@ CLI immediately; exposing it to a model is a separate, considered step.
 
 ## Configuration
 
-`~/.config/aws-harness/config.yaml` — accounts, businesses, regions,
+`~/.config/cloud-harness/config.yaml` — accounts, businesses, regions,
 role ARNs, ExternalIds, `read_only` flags. Credentials never live in
 this file: profiles, SSO or AssumeRole only.
 

@@ -1,5 +1,5 @@
 """
-AWS Harness CLI — Main Entry Point
+Cloud Harness CLI — main entry point
 
 Usage:
     harness [global-options] <command> [subcommand] [options]
@@ -34,7 +34,7 @@ from harness_primitives.failure import HarnessError
 
 app = typer.Typer(
     name="harness",
-    help="Multi-account AWS management harness",
+    help="Multi-account AWS management CLI",
     add_completion=False,
     no_args_is_help=True,
 )
@@ -114,7 +114,7 @@ def main_callback(
         False, "--refresh",
         help="Clear credential + region caches before running"),
 ):
-    """AWS Management Harness — Multi-account, multi-region AWS management."""
+    """Cloud Harness CLI — multi-account, multi-region AWS management."""
     if output_format not in ("json", "table", "yaml", "text"):
         raise typer.BadParameter(
             f"Invalid output format: '{output_format}'. "
@@ -147,7 +147,7 @@ def build_session(config=None):
 
     Profile precedence (highest first):
       1. --profile explicitly given on the command line
-      2. AWS_HARNESS_PROFILE env override (applied to config at load time)
+      2. CLOUD_HARNESS_PROFILE env override (applied to config at load time)
       3. config accounts.defaults.profile
       4. "default"
     """
@@ -311,10 +311,7 @@ def version():
     """Show version info."""
     import importlib.metadata
     try:
-        try:
-            v = importlib.metadata.version("cloud-harness-cli")
-        except importlib.metadata.PackageNotFoundError:
-            v = importlib.metadata.version("aws-harness")  # pre-rename install
+        v = importlib.metadata.version("cloud-harness-cli")
     except importlib.metadata.PackageNotFoundError:
         v = "0.1.0-dev"
     typer.echo(f"cloud-harness-cli {v}")

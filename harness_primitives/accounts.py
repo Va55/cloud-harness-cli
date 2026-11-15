@@ -234,7 +234,7 @@ class AccountResolver:
                 raise HarnessError(
                     "No account specified and no default configured. "
                     "Use --account (and --business), set "
-                    "AWS_HARNESS_ACCOUNT, or configure "
+                    "CLOUD_HARNESS_ACCOUNT, or configure "
                     "accounts.default_account / businesses[].default_account.",
                     FailureCategory.PERMISSION,
                 )

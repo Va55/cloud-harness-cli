@@ -29,7 +29,7 @@ sleep 1.8
 
 clear
 echo -e "${Y}\$ sqlite3 audit.db \"SELECT …\"${N}"
-sqlite3 -column ~/.cache/aws-harness/audit.db \
+sqlite3 -column ~/.cache/cloud-harness/audit.db \
   "SELECT timestamp, source_identity, action, dry_run, success
    FROM audit_events ORDER BY rowid"
 sleep 2.0

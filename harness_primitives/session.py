@@ -1,5 +1,5 @@
 """
-Session management for AWS Harness.
+Session management for Cloud Harness CLI.
 
 Creates boto3 sessions with proper credential resolution and caching.
 botocore clients are thread-safe; resources are not.

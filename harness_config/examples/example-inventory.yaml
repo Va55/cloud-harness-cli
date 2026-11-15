@@ -1,10 +1,10 @@
-# AWS Harness config — generated from tests/fixtures/example-accounts.xlsx
+# Cloud Harness CLI config — generated from tests/fixtures/example-accounts.xlsx
 # by scripts/import-accounts-xlsx.py on 2026-11-14
 #
 # TODO before use:
 #   1. Fix each business's `profile:` to match your ~/.aws/credentials
 #      profile names (generated as the business name lowercased).
-#   2. Copy to ~/.config/aws-harness/config.yaml
+#   2. Copy to ~/.config/cloud-harness/config.yaml
 #
 # Accounts without role_arn (e.g. the shared login account) are used
 # with their profile's credentials directly.

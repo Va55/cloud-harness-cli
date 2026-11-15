@@ -1,5 +1,5 @@
 """
-AWS Harness Primitives Layer
+Cloud Harness CLI — primitives layer
 
 Shared building blocks: session management, credentials, pagination,
 region detection, output formatting, failure handling, rate limiting.

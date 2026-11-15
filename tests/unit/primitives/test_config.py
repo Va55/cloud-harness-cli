@@ -59,10 +59,13 @@ class TestLoadConfig:
     def test_no_config_uses_defaults(self, tmp_path, monkeypatch):
         monkeypatch.setenv("HARNESS_CONFIG", "")  # empty → unset behavior
         os.environ.pop("HARNESS_CONFIG", None)
-        os.environ.pop("AWS_HARNESS_CONFIG", None)
+        os.environ.pop("CLOUD_HARNESS_CONFIG", None)
         # Point home to empty dir so default path doesn't exist
         monkeypatch.setattr("harness_primitives.config.DEFAULT_CONFIG_PATH",
                             tmp_path / "nothing.yaml")
+        # the pre-rename fallback must not reach a real installation
+        monkeypatch.setattr("harness_primitives.config.LEGACY_CONFIG_DIR",
+                            tmp_path / "legacy-none")
         cfg = load_config()
         assert cfg.accounts.defaults.profile == "default"
         assert cfg.execution.max_workers == 50
@@ -89,12 +92,12 @@ class TestLoadConfig:
 
 class TestEnvOverrides:
     def test_account_env_override(self, config_file, monkeypatch):
-        monkeypatch.setenv("AWS_HARNESS_ACCOUNT", "222222222222")
+        monkeypatch.setenv("CLOUD_HARNESS_ACCOUNT", "222222222222")
         cfg = load_config(str(config_file))
         assert cfg.accounts.default_account == "222222222222"
 
     def test_profile_env_override(self, config_file, monkeypatch):
-        monkeypatch.setenv("AWS_HARNESS_PROFILE", "staging")
+        monkeypatch.setenv("CLOUD_HARNESS_PROFILE", "staging")
         cfg = load_config(str(config_file))
         assert cfg.accounts.defaults.profile == "staging"
 

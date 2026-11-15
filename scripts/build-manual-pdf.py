@@ -227,7 +227,7 @@ def build(out_path):
         "\n"
         "# 1. create your config (see §4) — or import from a spreadsheet:\n"
         "python3 scripts/import-accounts-xlsx.py accounts.xlsx \\\n"
-        "    ~/.config/aws-harness/config.yaml\n"
+        "    ~/.config/cloud-harness/config.yaml\n"
         "\n"
         "# 2. check your identity\n"
         "harness whoami\n"
@@ -266,7 +266,7 @@ def build(out_path):
     # 4 config
     story.append(h1("4 · The configuration file", toc))
     story.append(body(
-        "Location: ~/.config/aws-harness/config.yaml (or --config PATH). "
+        "Location: ~/.config/cloud-harness/config.yaml (or --config PATH). "
         "A fully annotated example lives in "
         "harness_config/examples/example-inventory.yaml."))
     story.append(code(
@@ -297,8 +297,8 @@ def build(out_path):
          ["--business alpha", "scope to a business (alone: its default)"],
          ["(nothing)", "config default_account, else a clean error — "
           "never a silent guess"]]))
-    story.append(body("Environment overrides: AWS_HARNESS_ACCOUNT, "
-                  "AWS_HARNESS_PROFILE."))
+    story.append(body("Environment overrides: CLOUD_HARNESS_ACCOUNT, "
+                  "CLOUD_HARNESS_PROFILE."))
 
     # 5 global options
     story.append(h1("5 · Global options & exit codes", toc))
@@ -457,7 +457,7 @@ def build(out_path):
     story.extend(shot("audit", "Figure 17 — every mutation recorded with "
                            "attribution and dry-run flags"))
     story.append(code(
-        'sqlite3 ~/.cache/aws-harness/audit.db \\\n'
+        'sqlite3 ~/.cache/cloud-harness/audit.db \\\n'
         '  "SELECT timestamp, source_identity, action, resource_id,\n'
         '          dry_run, success FROM audit_events ORDER BY rowid"'))
 
@@ -465,11 +465,11 @@ def build(out_path):
     story.append(h1("14 · Where things live", toc))
     story.append(simple_table(
         ["Path", "Content"],
-        [["~/.config/aws-harness/config.yaml", "your configuration"],
-         ["~/.cache/aws-harness/inventory.db",
+        [["~/.config/cloud-harness/config.yaml", "your configuration"],
+         ["~/.cache/cloud-harness/inventory.db",
           "accounts, region cache, inventory snapshots"],
-         ["~/.cache/aws-harness/audit.db", "audit trail"],
-         ["~/.cache/aws-harness/credentials/",
+         ["~/.cache/cloud-harness/audit.db", "audit trail"],
+         ["~/.cache/cloud-harness/credentials/",
           "rotated key secrets (0600 files)"]],
         widths=[6.5 * cm, 9 * cm]))
 

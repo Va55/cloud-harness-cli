@@ -1,5 +1,5 @@
-# AWS Harness Config Template
-# Copy to ~/.config/aws-harness/config.yaml and customize.
+# Cloud Harness CLI — config template
+# Copy to ~/.config/cloud-harness/config.yaml and customize.
 
 # Account definitions
 accounts:
@@ -92,11 +92,11 @@ security:
 # Inventory storage
 inventory:
   store: sqlite
-  sqlite_path: ~/.cache/aws-harness/inventory.db
+  sqlite_path: ~/.cache/cloud-harness/inventory.db
   retention_days: 90
 
 # Audit trail
 audit:
   enabled: true
-  sqlite_path: ~/.cache/aws-harness/audit.db
+  sqlite_path: ~/.cache/cloud-harness/audit.db
   retention_days: 365

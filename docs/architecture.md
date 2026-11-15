@@ -1,4 +1,4 @@
-# AWS Management Harness — Architecture Design v3.0 (Final)
+# Cloud Harness CLI — Architecture Design v3.0 (Final)
 
 > Multi-account, multi-region AWS management platform. CLI-first, Python/boto3. Single-operator scope (v3.1): one user, >4 businesses, each business >3 AWS accounts.
 > Reviews: GLM-5.3 (structural critique) + DeepSeek Pro V4 (operational precision)
@@ -191,7 +191,7 @@ Organizations API (discovered, primary)     Manual override (YAML)
 
 **Resolution order:**
 1. Explicit `--account <id|name|ou-path>` flag
-2. `AWS_HARNESS_ACCOUNT` env var
+2. `CLOUD_HARNESS_ACCOUNT` env var
 3. Current AWS CLI profile name
 4. Default profile
 5. **NO implicit org root fallback** — requires explicit opt-in
@@ -257,7 +257,7 @@ response = sts.assume_role(
 ### 2.4. Credential Cache (Secure — Atomic Writes)
 
 ```
-Credential cache location: ~/.cache/aws-harness/credentials
+Credential cache location: ~/.cache/cloud-harness/credentials
 Permissions: 0600 (owner read/write only), directory 0700
 Format: JSON with TTL-based expiration
 Atomic writes: O_EXCL | O_NOFOLLOW + fsync + os.replace()
@@ -270,7 +270,7 @@ import os, json, tempfile
 class CredentialCache:
     """Secure credential caching with atomic writes."""
     
-    CACHE_DIR = Path.home() / ".cache" / "aws-harness"
+    CACHE_DIR = cache_dir()          # ~/.cache/cloud-harness
     
     def __init__(self):
         self.CACHE_DIR.mkdir(parents=True, exist_ok=True)
@@ -739,7 +739,7 @@ def format_output(result: PartialResult, format: str, verbose: bool = False) -> 
 ### 2.10. Credential Cache (Updated — Atomic Writes + Security)
 
 ```
-Credential cache location: ~/.cache/aws-harness/credentials
+Credential cache location: ~/.cache/cloud-harness/credentials
 Permissions: 0600 (file), 0700 (directory)
 Format: JSON with TTL-based expiration
 Atomic writes: O_EXCL | O_NOFOLLOW + fsync + os.replace()
@@ -1031,7 +1031,7 @@ harness plugin validate                     # Check for duplicate command names
 │  • SSO / AssumeRole / Static keys                   │
 │  • SourceIdentity + RoleSessionName + ExternalId    │
 │  • SessionTags + TransitiveTagKeys                  │
-│  • Credential cache (~/.cache/aws-harness/)         │
+│  • Credential cache (~/.cache/cloud-harness/)         │
 │  • Atomic writes (O_EXCL | O_NOFOLLOW + fsync)      │
 │  • 0600 permissions (file), 0700 (directory)        │
 │  • TTL-based expiration                             │
@@ -1279,7 +1279,7 @@ def get_db_connection(db_path: Path) -> sqlite3.Connection:
 [project]
 name = "cloud-harness-cli"
 version = "0.1.0"
-description = "Multi-account AWS management harness"
+description = "Multi-account AWS management CLI"
 requires-python = ">=3.11,<3.13"
 license = {text = "Apache-2.0"}
 
@@ -1339,7 +1339,7 @@ inventory = "harness_plugins.inventory.plugin:InventoryPlugin"
 ## 8. Configuration File (Updated)
 
 ```yaml
-# ~/.config/aws-harness/config.yaml
+# ~/.config/cloud-harness/config.yaml
 
 # Account definitions
 accounts:
@@ -1398,13 +1398,13 @@ security:
 # Inventory storage
 inventory:
   store: sqlite
-  sqlite_path: ~/.cache/aws-harness/inventory.db
+  sqlite_path: ~/.cache/cloud-harness/inventory.db
   retention_days: 90
 
 # Audit trail
 audit:
   enabled: true
-  sqlite_path: ~/.cache/aws-harness/audit.db
+  sqlite_path: ~/.cache/cloud-harness/audit.db
   retention_days: 365
 
 # SQLite settings

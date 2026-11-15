@@ -1,5 +1,5 @@
 """
-Secure credential caching for AWS Harness.
+Secure credential caching for Cloud Harness CLI.
 
 Only caches TEMPORARY credentials (AssumeRole, SSO).
 Never caches static access keys.
@@ -13,13 +13,14 @@ Uses atomic writes:
 import json
 import os
 import time
-from pathlib import Path
+
+from harness_primitives.config import cache_dir
 
 
 class CredentialCache:
     """Secure credential caching with atomic writes."""
 
-    CACHE_DIR = Path.home() / ".cache" / "aws-harness"
+    CACHE_DIR = cache_dir()
 
     def __init__(self):
         self.CACHE_DIR.mkdir(parents=True, exist_ok=True)

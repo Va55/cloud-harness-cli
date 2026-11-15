@@ -3,13 +3,13 @@ Configuration loading and validation.
 
 Resolution order:
 1. --config flag path
-2. HARNESS_CONFIG / AWS_HARNESS_CONFIG env var
-3. ~/.config/aws-harness/config.yaml (if exists)
+2. CLOUD_HARNESS_CONFIG (or HARNESS_CONFIG) env var
+3. ~/.config/cloud-harness/config.yaml (if exists)
 4. Built-in defaults (always valid)
 
 Env var overrides (highest precedence for their field):
-- AWS_HARNESS_ACCOUNT → accounts.default_account
-- AWS_HARNESS_PROFILE → accounts.defaults.profile
+- CLOUD_HARNESS_ACCOUNT → accounts.default_account
+- CLOUD_HARNESS_PROFILE → accounts.defaults.profile
 
 All YAML loaded with yaml.safe_load(). Paths (~) expanded. $VAR in
 session_tags expanded from the environment.
@@ -23,7 +23,35 @@ from typing import Any, Optional
 import yaml
 from pydantic import BaseModel, Field, ValidationError
 
-DEFAULT_CONFIG_PATH = Path.home() / ".config" / "aws-harness" / "config.yaml"
+# ─── Locations ─────────────────────────────────────────────────
+# The project was renamed after its first release. Runtime locations keep
+# working for existing installations: the new directory is preferred, the
+# pre-rename one is used when it already exists (no migration step).
+APP_NAME = "cloud-harness"
+LEGACY_APP_NAME = "aws-harness"
+
+CONFIG_DIR = Path.home() / ".config" / APP_NAME
+LEGACY_CONFIG_DIR = Path.home() / ".config" / LEGACY_APP_NAME
+CACHE_DIR = Path.home() / ".cache" / APP_NAME
+LEGACY_CACHE_DIR = Path.home() / ".cache" / LEGACY_APP_NAME
+
+
+def cache_dir() -> Path:
+    """Cache directory: new location, else the pre-rename one."""
+    if CACHE_DIR.exists():
+        return CACHE_DIR
+    return LEGACY_CACHE_DIR if LEGACY_CACHE_DIR.exists() else CACHE_DIR
+
+
+DEFAULT_CONFIG_PATH = CONFIG_DIR / "config.yaml"
+
+
+def config_path() -> Path:
+    """Default config file: new location, else the pre-rename one."""
+    if DEFAULT_CONFIG_PATH.exists():
+        return DEFAULT_CONFIG_PATH
+    legacy = LEGACY_CONFIG_DIR / "config.yaml"      # pre-rename installation
+    return legacy if legacy.exists() else DEFAULT_CONFIG_PATH
 
 
 # ─── Pydantic models (the living schema) ───────────────────────
@@ -158,13 +186,13 @@ class SecurityConfig(BaseModel):
 
 class InventoryConfig(BaseModel):
     store: str = "sqlite"
-    sqlite_path: Path = Path.home() / ".cache" / "aws-harness" / "inventory.db"
+    sqlite_path: Path = cache_dir() / "inventory.db"
     retention_days: int = 90
 
 
 class AuditConfig(BaseModel):
     enabled: bool = True
-    sqlite_path: Path = Path.home() / ".cache" / "aws-harness" / "audit.db"
+    sqlite_path: Path = cache_dir() / "audit.db"
     retention_days: int = 365
 
 
@@ -209,14 +237,17 @@ def find_config_path(explicit: Optional[str] = None) -> Optional[Path]:
         if not p.exists():
             raise FileNotFoundError(f"Config file not found: {p}")
         return p
-    env = os.environ.get("HARNESS_CONFIG") or os.environ.get("AWS_HARNESS_CONFIG")
+    env = (os.environ.get("CLOUD_HARNESS_CONFIG")
+           or os.environ.get("HARNESS_CONFIG")
+           or os.environ.get("CLOUD_HARNESS_CONFIG"))  # last two: pre-rename
     if env:
         p = Path(env).expanduser()
         if not p.exists():
             raise FileNotFoundError(f"Config file not found: {p}")
         return p
-    if DEFAULT_CONFIG_PATH.exists():
-        return DEFAULT_CONFIG_PATH
+    resolved = config_path()      # honours a monkeypatched DEFAULT_CONFIG_PATH
+    if resolved.exists():
+        return resolved
     return None
 
 
@@ -244,9 +275,13 @@ def load_config(explicit: Optional[str] = None) -> HarnessConfig:
     config.source_path = path
 
     # ── Environment overrides (highest precedence for their fields) ──
-    if os.environ.get("AWS_HARNESS_ACCOUNT"):
-        config.accounts.default_account = os.environ["AWS_HARNESS_ACCOUNT"]
-    if os.environ.get("AWS_HARNESS_PROFILE"):
-        config.accounts.defaults.profile = os.environ["AWS_HARNESS_PROFILE"]
+    account_env = (os.environ.get("CLOUD_HARNESS_ACCOUNT")
+                   or os.environ.get("CLOUD_HARNESS_ACCOUNT"))  # pre-rename
+    if account_env:
+        config.accounts.default_account = account_env
+    profile_env = (os.environ.get("CLOUD_HARNESS_PROFILE")
+                   or os.environ.get("CLOUD_HARNESS_PROFILE"))  # pre-rename
+    if profile_env:
+        config.accounts.defaults.profile = profile_env
 
     return config

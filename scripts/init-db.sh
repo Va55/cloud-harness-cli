@@ -11,7 +11,7 @@ AUDIT_DB="$DB_DIR/audit.db"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SCHEMA_DIR="$(dirname "$SCRIPT_DIR")/harness_store/schemas"
 
-echo "Initializing AWS Harness databases..."
+echo "Initializing Cloud Harness CLI databases..."
 
 for db in "$INVENTORY_DB" "$AUDIT_DB"; do
     echo "  Creating: $db"

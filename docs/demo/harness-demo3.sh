@@ -26,7 +26,7 @@ harness ask "show the backup vault" 2>/dev/null; mark ask; sleep 2.6
 
 clear
 echo -e "${Y}\$ sqlite3 audit.db \"SELECT …\"${N}"
-sqlite3 -column ~/.cache/aws-harness/audit.db \
+sqlite3 -column ~/.cache/cloud-harness/audit.db \
   "SELECT timestamp, source_identity, action, dry_run, success FROM audit_events ORDER BY rowid"
 mark audit; sleep 2.6
 

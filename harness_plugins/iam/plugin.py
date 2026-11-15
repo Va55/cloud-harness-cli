@@ -423,7 +423,7 @@ class IAMPlugin(BasePlugin):
                                           Status="Inactive")
                 deactivated += 1
 
-        secret_dir = Path.home() / ".cache" / "aws-harness" / "credentials"
+        secret_dir = Path.home() / ".cache" / "cloud-harness" / "credentials"
         secret_dir.mkdir(parents=True, exist_ok=True)
         os.chmod(secret_dir, 0o700)
         secret_path = (Path(secret_output_file).expanduser() if secret_output_file

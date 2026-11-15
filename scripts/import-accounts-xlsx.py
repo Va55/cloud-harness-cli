@@ -17,7 +17,7 @@ Usage:
     python3 scripts/import-accounts-xlsx.py <spreadsheet.xlsx> [out.yaml]
 
 The generated file is a starting point: fix the profile names, add
-defaults/regions as needed, then copy to ~/.config/aws-harness/config.yaml
+defaults/regions as needed, then copy to ~/.config/cloud-harness/config.yaml
 """
 
 import sys
@@ -96,13 +96,13 @@ def main():
     body = yaml.safe_dump(config, sort_keys=False, default_flow_style=False)
 
     header = """\
-# AWS Harness config — generated from {xlsx}
+# Cloud Harness CLI config — generated from {xlsx}
 # by scripts/import-accounts-xlsx.py on {date}
 #
 # TODO before use:
 #   1. Fix each business's `profile:` to match your ~/.aws/credentials
 #      profile names (generated as the business name lowercased).
-#   2. Copy to ~/.config/aws-harness/config.yaml
+#   2. Copy to ~/.config/cloud-harness/config.yaml
 #
 # Accounts without role_arn (e.g. the shared login account) are used
 # with their profile's credentials directly.

@@ -38,7 +38,7 @@ GUI-launched clients (VS Code, Cursor) often **do not inherit your
 shell PATH** — if `harness` is not found, use the absolute path from
 `which harness` (e.g. `/home/USER/.local/bin/harness`) in `command`.
 
-The server reads `~/.config/aws-harness/config.yaml` and your AWS
+The server reads `~/.config/cloud-harness/config.yaml` and your AWS
 profiles from the environment/`~/.aws`; nothing needs to be passed in
 unless you want a per-project config (`HARNESS_CONFIG`).
 
@@ -56,7 +56,7 @@ pi mcp list                       # → connected, 24 tools
 - inside a session: `/mcp` to inspect/reconnect,
   `/reload` after external changes
 - tools reach the model as `mcp__cloud-harness-cli__<tool>` and are callable
-  from codemode as `mcp__aws_harness.<tool>`
+  from codemode as `mcp__<server>.<tool>`
 - JSON equivalent:
 
 ```json

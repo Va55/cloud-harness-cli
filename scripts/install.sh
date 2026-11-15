@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# ── AWS Harness installer (Linux / macOS / WSL2) ─────────────────
+# ── Cloud Harness CLI installer (Linux / macOS / WSL2) ─────────────────
 # One command from a fresh machine to a working harness:
 #     ./scripts/install.sh
 # Idempotent: safe to re-run. Options via env:
@@ -61,10 +61,10 @@ cat <<'EOF'
 ✓ Installed. Next:
     1. Credentials: put your AWS profiles in ~/.aws/credentials
     2. Config:       cp harness_config/templates/config.yaml \
-                         ~/.config/aws-harness/config.yaml  (then edit)
+                         ~/.config/cloud-harness/config.yaml  (then edit)
        — or import from a spreadsheet:
          python3 scripts/import-accounts-xlsx.py accounts.xlsx \
-             ~/.config/aws-harness/config.yaml
+             ~/.config/cloud-harness/config.yaml
     3. Verify:        harness whoami && harness doctor
 
 Docs: docs/user-manual.md · docs/production-rollout-plan.md
