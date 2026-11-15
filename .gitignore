@@ -12,10 +12,20 @@ build/
 venv/
 env/
 
-# AWS Harness
+# AWS Harness — local state (NEVER commit: holds live account IDs,
+# resource inventory and the audit trail)
 .harness/
-~/.config/aws-harness/config.yaml
-~/.cache/aws-harness/
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+inventory.db
+audit.db
+
+# tool caches (contain absolute paths + source snippets)
+.mypy_cache/
+.ruff_cache/
 
 # IDE
 .idea/
