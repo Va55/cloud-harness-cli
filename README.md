@@ -1,8 +1,8 @@
 # AWS Management Harness
 
 Multi-account, multi-region AWS read and audit surface for a single
-operator. Written in Python/boto3 and CLI first; the same capability
-set is exposed as **24 typed MCP tools** for use from an AI client.
+operator. Written in Python/boto3. **One capability set, two
+interfaces** — a CLI you drive, and an MCP server your assistant drives.
 
 <p>
   <img alt="python 3.11+" src="https://img.shields.io/badge/python-3.11%2B-3776AB?style=flat-square&logo=python&logoColor=white">
@@ -22,15 +22,64 @@ supports. This harness replaces console navigation with typed verbs
 that can be scripted, audited and delegated to an assistant. See
 [MOTIVATION.md](MOTIVATION.md).
 
-## Use as an MCP server
-
-One stdio server. No listener, no daemon, no port, no credentials in
-transit — the client spawns it as a child process.
-
 ```bash
 pip install -e . --break-system-packages     # or: pipx install .
 harness doctor                               # credentials, regions, plugins
-harness serve-mcp                            # JSON-RPC on stdio
+```
+
+## Two interfaces, one capability set
+
+|  | **The tool — `harness`** | **The server — `harness serve-mcp`** |
+|---|---|---|
+| Who drives it | you: terminal, script, cron | your AI client |
+| How you talk to it | commands, flags, `--output json` | 24 typed tools over JSON-RPC (stdio) |
+| Additional setup | none | one registration line in the client |
+| Can it change AWS | yes — safe operations, dry-run by default, `--yes` executes | **no** — read and simulate only |
+| Output | tables or JSON, real exit codes | typed JSON, 50-row cap |
+| Typical use | routine work, audits, scheduled checks, scripting | "what exists, what is exposed, what does it cost" in prose |
+
+Both surfaces call the same plugin methods. The MCP surface is
+deliberately the stricter subset of the CLI — see
+[Safety model](#safety-model) for why.
+
+### As a tool — the CLI
+
+Twenty-five commands across eleven plugins. Installed above, it works
+immediately:
+
+```bash
+harness doctor                                   # health: credentials, regions, plugins
+harness account list                             # known accounts, all businesses
+harness --business alpha account list            # one business (global flag)
+harness --all-accounts iam find-unused --days 90 # one sweep, every account
+harness ec2 list-instances --state stopped --region eu-north-1
+harness vpc audit --account production           # IGW, NAT, NACL, flow logs
+harness cost total --days 30                     # Cost Explorer
+harness console ec2 i-0abc1234 --region eu-north-1   # deep link, no navigation
+```
+
+Natural language without an LLM — a deterministic router that can only
+select commands which exist, and routes every mutation through
+`--dry-run` first:
+
+```bash
+harness ask "show unused iam keys in prod"
+#   → harness iam find-unused --account prod
+```
+
+Global flags, before or after the subcommand: `--business`,
+`--account`, `--all-accounts`, `--all-regions`, `--region`,
+`--output table|json`, `--dry-run`, `--quiet`, `--verbose`,
+`--profile`, `--role`, `--external-id`, `--refresh`.
+
+### As a server — MCP
+
+The same capability set, exposed for an AI client. One stdio process —
+no listener, no daemon, no port, no credentials in transit; the client
+spawns it as a child process.
+
+```bash
+harness serve-mcp                                # JSON-RPC on stdio
 ```
 
 Client registration — one line each:
@@ -46,7 +95,7 @@ A reasonable first exchange: *"run doctor, then whoami"*. The client
 should report 24 tools. Configuration files, verification and a
 troubleshooting table are in **[docs/mcp-clients.md](docs/mcp-clients.md)**.
 
-### Tool surface
+### Tool surface (the 24 MCP tools)
 
 | Domain | Tools |
 |---|---|
@@ -65,16 +114,16 @@ The constraint that shaped the MCP surface: **a boolean an LLM can set
 is not a safety boundary**. Consequently the server is not given the
 ability to mutate.
 
-- **Read and simulate only.** Execution of changes happens in the CLI,
-  behind `--yes`. There is no MCP path to a real mutation.
+- **Read and simulate only over MCP.** Execution of changes happens in
+  the CLI, behind `--yes`. There is no MCP path to a real mutation.
 - **`read_only` is enforced once, in code** (`ensure_mutable`), before
   any API call, and exits 2. Business- and account-level, with account
   overriding business.
-- **Result sets are capped at 50 rows** so a sweep cannot consume a
-  model's context.
-- **Every action is attributable**: MCP calls are recorded in the audit
-  trail as `harness:mcp`; CloudTrail sees the session as
-  `harness-<operator>`.
+- **Result sets are capped at 50 rows** over MCP so a sweep cannot
+  consume a model's context.
+- **Every action is attributable**: CLI actions appear as
+  `harness-<operator>` in CloudTrail, MCP calls additionally land in the
+  audit trail as `harness:mcp`.
 - **Least privilege and ExternalId** on every AssumeRole — no
   confused-deputy exposure. Policies are in
   [docs/harness-needed_aws-roles.md](docs/harness-needed_aws-roles.md).
@@ -86,8 +135,6 @@ ability to mutate.
   credentials.
 - Not a replacement for the console. It covers the routine questions —
   what exists, what it costs, what is exposed — not every edge case.
-
----
 
 ## Design
 
@@ -105,38 +152,19 @@ ability to mutate.
 - **One capability set, two surfaces.** The CLI and the MCP server call
   the same plugin methods; the MCP surface is the stricter subset.
 
-## Quick Start
-
-```bash
-# Install
-pip install -e .
-
-# Configure AWS credentials (CLI profiles)
-aws configure --profile prod
-aws sso login --profile staging  # if using IAM Identity Center
-
-# Initialize database
-harness init-db
-
-# Check health
-harness doctor
-
-# List accounts
-harness account list
-
-# Collect inventory
-harness inventory collect --account production --all-regions --output json
-
-# View cost
-harness cost explorer --start 2025-01-01 --end 2025-01-31 --account production
-```
-
 ## Configuration
 
-Config file: `~/.config/aws-harness/config.yaml`
+`~/.config/aws-harness/config.yaml` — accounts, businesses, regions,
+role ARNs, ExternalIds, `read_only` flags. Credentials never live in
+this file: profiles, SSO or AssumeRole only.
 
-See [`docs/aws-reference.md`](docs/aws-reference.md) for full AWS service reference.
-See [`docs/architecture.md`](docs/architecture.md) for architecture details.
+```bash
+harness init-db          # local store: accounts, inventory snapshots, audit trail
+```
+
+See [`docs/architecture.md`](docs/architecture.md) for internals and
+[`docs/aws-reference.md`](docs/aws-reference.md) for the AWS service
+reference.
 
 ## Capability matrix
 
@@ -157,7 +185,8 @@ See [`docs/architecture.md`](docs/architecture.md) for architecture details.
 Read paths are safe to run anywhere. Safe operations default to
 `--dry-run`; `--yes` executes, and `read_only` businesses refuse them.
 
-Out of scope by design: provisioning, deletion, drift management (Terraform/CDK), and anything requiring a persistent daemon.
+Out of scope by design: provisioning, deletion, drift management
+(Terraform/CDK), and anything requiring a persistent daemon.
 
 ## Credential handling
 
@@ -170,12 +199,19 @@ Out of scope by design: provisioning, deletion, drift management (Terraform/CDK)
 - Per-account, per-region, per-API rate limiting (Cost Explorer is
   serialized at 0.5 TPS).
 
+## Documentation
+
+| Document | For |
+|---|---|
+| [docs/user-manual.md](docs/user-manual.md) | every command, with live-verified output |
+| [docs/mcp-clients.md](docs/mcp-clients.md) | wiring Pi, Hermes, Claude Code, VS Code |
+| [docs/ai-interface-guide.md](docs/ai-interface-guide.md) | which interface, which model, data governance |
+| [docs/harness-needed_aws-roles.md](docs/harness-needed_aws-roles.md) | IAM policies for each plugin, worked examples |
+| [docs/production-rollout-plan.md](docs/production-rollout-plan.md) | what to present for production access |
+| [docs/architecture.md](docs/architecture.md) | internals, decisions, trade-offs |
+| [PROJECT_LOG.md](PROJECT_LOG.md) | the development record, phase by phase |
+| [MOTIVATION.md](MOTIVATION.md) | why this exists |
+
 ## License
 
 MIT
-
-## Documentation
-
-See **docs/user-manual.md** — the user manual, and **docs/production-rollout-plan.md** — the plan to present for production-access approval.
-For MCP clients: **docs/mcp-clients.md** — copy-paste setup for Pi, Hermes, Claude Code and VS Code (24 tools over stdio).
-For AWS-side setup: **docs/harness-needed_aws-roles.md** — every role/user/permission the harness needs, with worked policy examples (read-only, cross-account trust + ExternalId, safe ops, the production double-lock).
