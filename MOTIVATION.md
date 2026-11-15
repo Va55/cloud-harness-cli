@@ -2,8 +2,7 @@
 
 This document states the problem aws-harness addresses, the design
 response it implements, and the criteria by which the result should be
-judged. Architectural detail lives in `docs/architecture.md`; the
-development record is in `PROJECT_LOG.md`.
+judged. Architectural detail lives in `docs/architecture.md`.
 
 ---
 
@@ -168,5 +167,4 @@ that determines whether the project was worth building.
 ---
 
 *Related: `docs/architecture.md` (design and decisions) ·
-`docs/user-manual.md` (commands) · `PROJECT_LOG.md` (development
-record and rationale).*
+`docs/user-manual.md` (commands).*

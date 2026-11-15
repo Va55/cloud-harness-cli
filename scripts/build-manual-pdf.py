@@ -3,7 +3,7 @@
 """Build the harness user manual as a PDF (with real screenshots).
 
 Screenshots are pre-rendered terminal images in /tmp/manual-shots/
-(see PROJECT_LOG Phase 27). Content mirrors docs/user-manual.md,
+(see the private development log). Content mirrors docs/user-manual.md,
 restructured for print with embedded examples.
 
 Usage: python3 scripts/build-manual-pdf.py [output.pdf]

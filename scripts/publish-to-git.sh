@@ -46,7 +46,12 @@ rsync -a --delete \
       --exclude='.pytest_cache' --exclude='.ruff_cache' \
       --exclude='.mypy_cache' --exclude='*.egg-info' \
       --exclude='.git' --exclude='.coverage' --exclude='infra/' \
+      --exclude='PROJECT_LOG.md' \
       "$WORK/" "$STAGE/"
+
+# the development log is private (kept on the operator's machine): ensure
+# it is gone from the stage even if an earlier publish carried it
+rm -f "$STAGE/PROJECT_LOG.md"
 
 # 2. sanitize from the LOCAL map (never committed)
 say "sanitizing from $MAP …"

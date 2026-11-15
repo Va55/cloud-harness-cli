@@ -370,7 +370,7 @@ audit data are kept (retention configurable in config).
 | Rate-limit errors on cost commands | Cost Explorer allows 0.5 req/s per account — the harness already serializes; don't run parallel cost commands. |
 
 For harness bugs, the full history and design rationale are in
-`PROJECT_LOG.md` and `docs/architecture.md`.
+`docs/architecture.md`.
 
 ---
 

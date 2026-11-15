@@ -14,7 +14,7 @@ from typing import Optional
 SCHEMA_DIR = Path(__file__).parent / "schemas"
 
 # Tables that live in the audit DB vs inventory DB (both get the full
-# schema for now — see PROJECT_LOG design debt; queries are namespaced).
+# schema for now — a known design debt; queries are namespaced).
 BUSY_TIMEOUT_MS = 5000
 
 

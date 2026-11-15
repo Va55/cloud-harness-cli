@@ -226,7 +226,6 @@ Out of scope by design: provisioning, deletion, drift management
 | [docs/harness-needed_aws-roles.md](docs/harness-needed_aws-roles.md) | IAM policies for each plugin, worked examples |
 | [docs/production-rollout-plan.md](docs/production-rollout-plan.md) | what to present for production access |
 | [docs/architecture.md](docs/architecture.md) | internals, decisions, trade-offs |
-| [PROJECT_LOG.md](PROJECT_LOG.md) | the development record, phase by phase |
 | [MOTIVATION.md](MOTIVATION.md) | why this exists |
 
 ## License
