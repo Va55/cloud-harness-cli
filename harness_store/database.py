@@ -18,11 +18,27 @@ SCHEMA_DIR = Path(__file__).parent / "schemas"
 BUSY_TIMEOUT_MS = 5000
 
 
+def _harden_permissions(path: Path, mode: int, *, is_dir: bool) -> None:
+    """Best-effort chmod (no-op where unsupported, e.g. Windows ACLs).
+
+    The store holds live account IDs, resource inventory and the audit
+    trail. Keep it owner-only: dir 0700, files 0600. Never fatal — a
+    filesystem that refuses chmod must not break the harness.
+    """
+    try:
+        if not is_dir or path.is_dir():
+            path.chmod(mode)
+    except (OSError, NotImplementedError):
+        pass
+
+
 def connect(db_path: Path) -> sqlite3.Connection:
     """Create a configured connection: WAL, busy_timeout, foreign keys ON."""
     db_path = Path(db_path).expanduser()
     db_path.parent.mkdir(parents=True, exist_ok=True)
+    _harden_permissions(db_path.parent, 0o700, is_dir=True)
     conn = sqlite3.connect(str(db_path), timeout=BUSY_TIMEOUT_MS / 1000)
+    _harden_permissions(db_path, 0o600, is_dir=False)
     conn.execute(f"PRAGMA busy_timeout={BUSY_TIMEOUT_MS}")
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA foreign_keys=ON")

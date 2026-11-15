@@ -153,3 +153,38 @@ class TestAudit:
         events = database.query_audit_trail(db)
         assert events[0]["success"] == 0
         assert events[0]["error_message"] == "DeleteConflict"
+
+
+def test_store_file_and_dir_are_owner_only(tmp_path, monkeypatch):
+    """The store holds account IDs + the audit trail: dir 0700, file 0600.
+
+    Skipped where POSIX modes do not apply (Windows ACLs).
+    """
+    import os
+    import stat
+    import sys
+
+    import pytest
+
+    from harness_store.database import connect
+
+    if sys.platform.startswith("win"):  # pragma: no cover
+        pytest.skip("POSIX permission bits not applicable")
+
+    db = tmp_path / "sub" / "store.db"
+    conn = connect(db)
+    conn.close()
+
+    d_mode = stat.S_IMODE(os.stat(db.parent).st_mode)
+    f_mode = stat.S_IMODE(os.stat(db).st_mode)
+    assert d_mode & 0o077 == 0, f"dir too open: {oct(d_mode)}"
+    assert f_mode & 0o077 == 0, f"file too open: {oct(f_mode)}"
+
+
+def test_harden_permissions_never_raises(tmp_path):
+    """A filesystem refusing chmod must not break the harness."""
+    from harness_store.database import _harden_permissions
+
+    # a path that does not exist for is_dir=True must be a silent no-op
+    _harden_permissions(tmp_path / "nope", 0o700, is_dir=True)
+    _harden_permissions(tmp_path / "nope", 0o600, is_dir=False)
