@@ -1,5 +1,6 @@
 # Cloud Harness CLI — config template
-# Copy to ~/.config/cloud-harness/config.yaml and customize.
+# Installer copies this to ~/.config/cloud-harness/config.yaml;
+# if installing manually, copy it there yourself. Then edit it.
 
 # Account definitions
 accounts:

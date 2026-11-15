@@ -99,6 +99,11 @@ spawns it as a child process.
 harness serve-mcp                                # JSON-RPC on stdio
 ```
 
+On a fresh machine, `./scripts/install.sh` does the whole thing — a
+dedicated virtual environment, the CLI on a path, the `[mcp]` extra, and a
+config template (it never touches `~/.aws` or an existing config).
+`--dry-run` shows the plan first.
+
 The MCP SDK is an optional extra: `pip install 'cloud-harness-cli[mcp]'`.
 The pin excludes SDK 2.x, whose import path this code does not use.
 
