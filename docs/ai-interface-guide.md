@@ -149,7 +149,7 @@ Whatever brain is attached **sees every tool result**: account IDs,
 resource inventories, IAM user lists, security findings. Ask one
 question:
 
-- **Sensitive organisational data** → use a sanctioned endpoint (or local),
+- **Sensitive organisational data** → use an approved organisational endpoint (or local),
   never a random public API; and the production rollout plan
   should say out loud that an AI sees the inventory as part of "the
   tool looks"
