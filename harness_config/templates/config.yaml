@@ -8,7 +8,7 @@ accounts:
   discovery: organizations
 
   # Manual overrides (for accounts not yet in Org or staging)
-  manual:
+  manual: []
     # - id: "000000000000"
     #   name: standalone
     #   profile: standalone
@@ -52,7 +52,7 @@ accounts:
     external_id: null             # External ID for cross-account security
     session_tags:
       harness_user: "$USER"
-    regions: null                 # Override regions for all accounts
+    regions: []                   # Override regions for all accounts
 
 # Execution settings
 execution:

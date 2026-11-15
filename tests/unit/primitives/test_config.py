@@ -139,3 +139,34 @@ accounts:
 """)
         with pytest.raises(ValueError):
             load_config(str(p))
+
+
+class TestShippedTemplate:
+    """The config template that ships to users must actually load.
+
+    Regression: `accounts.manual:` with only commented entries parses as
+    None, so every user who followed the manual ("copy the template")
+    hit a pydantic validation error on their first real command. Found
+    while proving the installer's --from-git path with a clean HOME.
+    """
+
+    def test_template_validates(self):
+        from pathlib import Path
+
+        from harness_primitives.config import load_config
+
+        template = Path("harness_config/templates/config.yaml")
+        assert template.exists(), "shipped template is missing"
+        cfg = load_config(str(template))          # must not raise
+        assert cfg.accounts.manual == []
+
+    def test_template_list_fields_are_lists(self):
+        """A bare `key:` with only comments parses as None and breaks
+        list-typed fields. `role_arn: null` is fine (Optional[str])."""
+        from pathlib import Path
+
+        from harness_primitives.config import load_config
+
+        cfg = load_config(str(Path("harness_config/templates/config.yaml")))
+        assert isinstance(cfg.accounts.manual, list)
+        assert isinstance(cfg.accounts.defaults.regions, list)
