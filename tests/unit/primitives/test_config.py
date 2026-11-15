@@ -63,9 +63,7 @@ class TestLoadConfig:
         # Point home to empty dir so default path doesn't exist
         monkeypatch.setattr("harness_primitives.config.DEFAULT_CONFIG_PATH",
                             tmp_path / "nothing.yaml")
-        # the pre-rename fallback must not reach a real installation
-        monkeypatch.setattr("harness_primitives.config.LEGACY_CONFIG_DIR",
-                            tmp_path / "legacy-none")
+
         cfg = load_config()
         assert cfg.accounts.defaults.profile == "default"
         assert cfg.execution.max_workers == 50

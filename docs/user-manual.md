@@ -70,10 +70,6 @@ If `whoami` prints your ARN and `doctor` passes, you're ready.
 ## 4. The config file
 
 Location: `~/.config/cloud-harness/config.yaml` (or pass `--config PATH`).
-
-Earlier builds used a differently named directory. If it is present it
-is still read as a fallback, so an existing installation keeps
-working without a migration step.
 A complete, annotated example is in
 `harness_config/examples/example-inventory.yaml`.
 

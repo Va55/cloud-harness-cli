@@ -24,34 +24,22 @@ import yaml
 from pydantic import BaseModel, Field, ValidationError
 
 # ─── Locations ─────────────────────────────────────────────────
-# The project was renamed after its first release. Runtime locations keep
-# working for existing installations: the new directory is preferred, the
-# pre-rename one is used when it already exists (no migration step).
 APP_NAME = "cloud-harness"
-LEGACY_APP_NAME = "aws-harness"
 
 CONFIG_DIR = Path.home() / ".config" / APP_NAME
-LEGACY_CONFIG_DIR = Path.home() / ".config" / LEGACY_APP_NAME
 CACHE_DIR = Path.home() / ".cache" / APP_NAME
-LEGACY_CACHE_DIR = Path.home() / ".cache" / LEGACY_APP_NAME
-
-
-def cache_dir() -> Path:
-    """Cache directory: new location, else the pre-rename one."""
-    if CACHE_DIR.exists():
-        return CACHE_DIR
-    return LEGACY_CACHE_DIR if LEGACY_CACHE_DIR.exists() else CACHE_DIR
-
 
 DEFAULT_CONFIG_PATH = CONFIG_DIR / "config.yaml"
 
 
+def cache_dir() -> Path:
+    """Cache directory for the store and cached credentials."""
+    return CACHE_DIR
+
+
 def config_path() -> Path:
-    """Default config file: new location, else the pre-rename one."""
-    if DEFAULT_CONFIG_PATH.exists():
-        return DEFAULT_CONFIG_PATH
-    legacy = LEGACY_CONFIG_DIR / "config.yaml"      # pre-rename installation
-    return legacy if legacy.exists() else DEFAULT_CONFIG_PATH
+    """Default configuration file."""
+    return DEFAULT_CONFIG_PATH
 
 
 # ─── Pydantic models (the living schema) ───────────────────────
