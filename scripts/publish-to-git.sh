@@ -85,8 +85,10 @@ PYEOF
 
 # 3. commit + push
 cd "$STAGE"
-git config user.name  "Team" 2>/dev/null || true
-git config user.email "team@example.com" 2>/dev/null || true
+# commit identity: GitHub handle + noreply address (attributes the
+# commits to the account without publishing a personal e-mail)
+git config user.name  "Va55" 2>/dev/null || true
+git config user.email "Va55@users.noreply.github.com" 2>/dev/null || true
 if [ ! -f .gitignore ]; then
     printf '# Python\n__pycache__/\n*.pyc\n*.egg-info/\n.venv/\nbuild/\n' > .gitignore
     printf '# caches / coverage\n.pytest_cache/\n.ruff_cache/\n.mypy_cache/\n.coverage\n' >> .gitignore
@@ -103,4 +105,13 @@ say "committed: $MSG"
 
 say "pushing to $REMOTE …"
 git push -q giada main
-say "pushed ✓  ($(git -C "$STAGE" log --oneline | wc -l) commit(s) on main)"
+say "pushed to giada ✓"
+
+# GitHub mirror (optional): set it up once with
+#   git -C "$STAGE" remote add github https://github.com/Va55/aws-harness.git
+if git remote get-url github >/dev/null 2>&1; then
+    say "pushing to github …"
+    git push -q github main
+    say "pushed to GitHub ✓"
+fi
+say "done — $(git -C "$STAGE" log --oneline | wc -l) commit(s) on main"
