@@ -1,77 +1,109 @@
 # AWS Management Harness
 
-<p align="center">
-  <img alt="MCP server" src="https://img.shields.io/badge/MCP%20server-stdio-8A2BE2?style=for-the-badge">
-  <img alt="24 tools" src="https://img.shields.io/badge/tools-24-1f6feb?style=for-the-badge">
-  <img alt="read-only" src="https://img.shields.io/badge/mode-read--only%20%2B%20dry--run-2ea44f?style=for-the-badge">
-  <img alt="tests" src="https://img.shields.io/badge/tests-393%20passing-brightgreen?style=for-the-badge">
-  <img alt="python" src="https://img.shields.io/badge/python-3.11%2B-3776AB?style=for-the-badge&logo=python&logoColor=white">
-  <img alt="license" src="https://img.shields.io/badge/license-MIT-lightgrey?style=for-the-badge">
+Multi-account, multi-region AWS read and audit surface for a single
+operator. Written in Python/boto3 and CLI first; the same capability
+set is exposed as **24 typed MCP tools** for use from an AI client.
+
+<p>
+  <img alt="python 3.11+" src="https://img.shields.io/badge/python-3.11%2B-3776AB?style=flat-square&logo=python&logoColor=white">
+  <img alt="tests" src="https://img.shields.io/badge/tests-393%20passing-2ea44f?style=flat-square">
+  <img alt="license" src="https://img.shields.io/badge/license-MIT-lightgrey?style=flat-square">
 </p>
 
-<p align="center"><b>Many AWS accounts. One operator. Zero console geography.</b><br>
-A CLI first — and <b>24 typed tools your AI client can call over MCP</b>.</p>
+**Status.** Phase 1 + 2 complete and exercised against live AWS. Read
+by default; write access is limited to a small set of safe operations,
+dry-run first, and is refused outright for businesses marked
+`read_only`. No provisioning and no deletes — that remains Terraform
+or CDK territory.
 
-> **Why it exists:** the AWS web console is a maze — this harness replaces
-> console navigation geography with typed verbs. See [MOTIVATION.md](MOTIVATION.md).
+**Why it exists.** Navigating the AWS console across several accounts,
+businesses and regions costs more attention than the decision it
+supports. This harness replaces console navigation with typed verbs
+that can be scripted, audited and delegated to an assistant. See
+[MOTIVATION.md](MOTIVATION.md).
 
----
+## Use as an MCP server
 
-## ⚡ Use it as an MCP server in 30 seconds
+One stdio server. No listener, no daemon, no port, no credentials in
+transit — the client spawns it as a child process.
 
 ```bash
-pip install -e . --break-system-packages   # 1. install (or: pipx install .)
-harness doctor                             # 2. green = credentials + plugins OK
-harness serve-mcp                          # 3. the server: stdio, no port, no daemon
+pip install -e . --break-system-packages     # or: pipx install .
+harness doctor                               # credentials, regions, plugins
+harness serve-mcp                            # JSON-RPC on stdio
 ```
 
-Then wire it into your client — **one line each**:
+Client registration — one line each:
 
-| Client | Command |
+| Client | Registration |
 |---|---|
-| **Pi** | `pi mcp add aws-harness -- harness serve-mcp` |
-| **Hermes** | `hermes mcp add aws-harness --command harness --args serve-mcp` |
-| **Claude Code** | `claude mcp add aws-harness -- harness serve-mcp` |
-| **VS Code** | `{"servers":{"aws-harness":{"type":"stdio","command":"harness","args":["serve-mcp"]}}}` → `.vscode/mcp.json` |
+| Pi | `pi mcp add aws-harness -- harness serve-mcp` |
+| Hermes | `hermes mcp add aws-harness --command harness --args serve-mcp` |
+| Claude Code | `claude mcp add aws-harness -- harness serve-mcp` |
+| VS Code | `{"servers":{"aws-harness":{"type":"stdio","command":"harness","args":["serve-mcp"]}}}` in `.vscode/mcp.json` |
 
-Ask your assistant **“run doctor, then whoami”** — and it is talking to real AWS.
-Full per-client guide (config files, verification, troubleshooting):
-**[docs/mcp-clients.md](docs/mcp-clients.md)**
+A reasonable first exchange: *"run doctor, then whoami"*. The client
+should report 24 tools. Configuration files, verification and a
+troubleshooting table are in **[docs/mcp-clients.md](docs/mcp-clients.md)**.
 
-### What the model gets
+### Tool surface
 
-| | |
+| Domain | Tools |
 |---|---|
-| **whoami · doctor · list_accounts · account_regions · console_url** | identity, health, accounts, regions, deep links |
-| **ec2\_list\_instances · ec2\_describe · s3\_list\_buckets · s3\_bucket\_info · vpc\_list** | compute + storage + network inventory |
-| **iam\_list\_users · iam\_find\_unused · iam\_check\_mfa** | identity hygiene across accounts |
-| **lambda\_list\_functions · cloudfront\_list\_distributions** | serverless + edge |
-| **security\_guardduty\_findings · security\_hub\_status** | security posture |
-| **org\_list\_accounts · org\_list\_ous** | live AWS Organizations view |
-| **backup\_list\_vaults · backup\_list\_jobs · cost\_total · inventory\_summarize** | backups, spend, local snapshot |
-| **safe\_op\_dry\_run** | simulate a mutation — changes nothing |
+| Identity and orientation | `whoami` · `doctor` · `list_accounts` · `account_regions` · `console_url` |
+| Compute, storage, network | `ec2_list_instances` · `ec2_describe` · `s3_list_buckets` · `s3_bucket_info` · `vpc_list` |
+| Identity hygiene | `iam_list_users` · `iam_find_unused` · `iam_check_mfa` |
+| Serverless and edge | `lambda_list_functions` · `cloudfront_list_distributions` |
+| Security posture | `security_guardduty_findings` · `security_hub_status` |
+| Organization | `org_list_accounts` · `org_list_ous` (management account) |
+| Backups, cost, inventory | `backup_list_vaults` · `backup_list_jobs` · `cost_total` · `inventory_summarize` |
+| Simulation | `safe_op_dry_run` — returns the plan, performs nothing |
 
-### Why it is safe to point at real accounts
+### Safety model
 
-- 🔒 **Read + simulate only over MCP** — real mutations are CLI-only (`--yes`); a boolean an LLM can set is not a safety boundary
-- 🧱 **`read_only` lock** for production businesses — enforced at one choke point in code, exit 2 before any API call
-- ✂️ **50-row cap** on results — no context blow-ups
-- 🧾 **Attribution** — MCP actions land in the audit trail as `harness:mcp`; CloudTrail sees `harness-<user>`
-- 🔑 **ExternalId** on every AssumeRole (no confused-deputy), least-privilege policies in [docs/harness-needed_aws-roles.md](docs/harness-needed_aws-roles.md)
+The constraint that shaped the MCP surface: **a boolean an LLM can set
+is not a safety boundary**. Consequently the server is not given the
+ability to mutate.
+
+- **Read and simulate only.** Execution of changes happens in the CLI,
+  behind `--yes`. There is no MCP path to a real mutation.
+- **`read_only` is enforced once, in code** (`ensure_mutable`), before
+  any API call, and exits 2. Business- and account-level, with account
+  overriding business.
+- **Result sets are capped at 50 rows** so a sweep cannot consume a
+  model's context.
+- **Every action is attributable**: MCP calls are recorded in the audit
+  trail as `harness:mcp`; CloudTrail sees the session as
+  `harness-<operator>`.
+- **Least privilege and ExternalId** on every AssumeRole — no
+  confused-deputy exposure. Policies are in
+  [docs/harness-needed_aws-roles.md](docs/harness-needed_aws-roles.md).
+
+### What it is not
+
+- Not a provisioning tool. No creates, no deletes, no drift management.
+- Not a multi-user service. One operator, one machine, per-account
+  credentials.
+- Not a replacement for the console. It covers the routine questions —
+  what exists, what it costs, what is exposed — not every edge case.
 
 ---
 
-## Features
+## Design
 
-- **Multi-account management**: Organizations API discovery + manual overrides
-- **Multi-region**: North America + Europe (region enablement detection)
-- **Inventory**: Read-only resource discovery across accounts/regions
-- **Cost overview**: Cost Explorer queries, budget status
-- **Security posture**: GuardDuty, Security Hub, Config, Macie, WAF aggregation
-- **Safe operations**: EC2 stop/start, Lambda invoke, IAM key rotation, CloudFront invalidation
-- **Audit trail**: CloudTrail attribution with SourceIdentity + diff tracking
-- **Plugin architecture**: Extensible service modules via entry points
-- **MCP server (shipped)**: `harness serve-mcp` — 24 typed tools, so Pi / Hermes / Claude Code / VS Code become a natural-language interface over the same safety model ([client guide](docs/mcp-clients.md))
+- **Multi-account by construction.** Accounts come from the Organizations
+  API or explicit config; nothing is inferred from the profile you
+  happen to have loaded.
+- **Multi-region with detection.** Region scope per account is the
+  intersection of configuration and what AWS reports as enabled, cached
+  for 24 hours.
+- **Every action attributable.** AssumeRole carries an ExternalId and
+  requests `SourceIdentity`; where the organization blocks it, the
+  harness falls back to session-name attribution rather than failing.
+- **Plugins, not monolith.** Eleven service plugins behind a
+  capability-based interface, loaded through entry points.
+- **One capability set, two surfaces.** The CLI and the MCP server call
+  the same plugin methods; the MCP surface is the stricter subset.
 
 ## Quick Start
 
@@ -99,16 +131,6 @@ harness inventory collect --account production --all-regions --output json
 harness cost explorer --start 2025-01-01 --end 2025-01-31 --account production
 ```
 
-## Installation
-
-```bash
-# From source
-pip install -e .
-
-# From PyPI (future)
-pip install aws-harness
-```
-
 ## Configuration
 
 Config file: `~/.config/aws-harness/config.yaml`
@@ -116,31 +138,37 @@ Config file: `~/.config/aws-harness/config.yaml`
 See [`docs/aws-reference.md`](docs/aws-reference.md) for full AWS service reference.
 See [`docs/architecture.md`](docs/architecture.md) for architecture details.
 
-## Phase 1 Scope (Current)
+## Capability matrix
 
-| Capability | Status |
-|------------|--------|
-| IAM (read-only) | ✅ |
-| EC2 (read + stop/start) | ✅ |
-| S3 (read-only) | ✅ |
-| CloudFront (read + invalidate) | ✅ |
-| Lambda (read + invoke) | ✅ |
-| VPC (read + safe ops) | ✅ |
-| Organizations (read) | ✅ |
-| Cost (read-only) | ✅ |
-| Security (read-only) | ✅ |
-| Inventory (read-only) | ✅ |
-| Audit trail (diff + trail) | ✅ |
+| Service | Read | Safe operation |
+|---|---|---|
+| IAM | users, keys, MFA, policies | access-key rotation |
+| EC2 | instances, images | start / stop |
+| S3 | buckets, encryption, policy, ACL, PAB | — |
+| CloudFront | distributions | cache invalidation |
+| Lambda | functions, configuration | invocation |
+| VPC | VPCs, subnets, IGW/NAT, NACLs, routes, endpoints, flow logs | — |
+| Organizations | accounts, roots, OUs (management account) | — |
+| Cost Explorer | totals, per service | — |
+| Security | GuardDuty findings, Security Hub status | — |
+| Backup | vaults, plans, recovery points, jobs | start backup job |
+| Inventory | collected snapshots, diffs, search | — |
 
-Phase 2 (future): Terraform scaffolding, ECS/EKS, RDS, provisioning via IaC.
+Read paths are safe to run anywhere. Safe operations default to
+`--dry-run`; `--yes` executes, and `read_only` businesses refuse them.
 
-## Security
+Out of scope by design: provisioning, deletion, drift management (Terraform/CDK), and anything requiring a persistent daemon.
 
-- No credentials in config files
-- SSO/AssumeRole with ExternalId + SourceIdentity attribution
-- Atomic credential cache (0600 permissions)
-- Tag-based deletion guards
-- Rate limiting per account/region/API
+## Credential handling
+
+- No credentials in configuration files — profiles, SSO or AssumeRole
+  only.
+- Derived credentials are cached atomically at mode 0600, in a 0700
+  directory, written with `O_EXCL` and no symlink following.
+- Secrets are never written to stdout or logs; rotation writes the new
+  key to a 0600 file and prints the path.
+- Per-account, per-region, per-API rate limiting (Cost Explorer is
+  serialized at 0.5 TPS).
 
 ## License
 
