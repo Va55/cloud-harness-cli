@@ -12,7 +12,7 @@ build/
 venv/
 env/
 
-# AWS Harness — local state (NEVER commit: holds live account IDs,
+# Cloud Harness CLI — local state (NEVER commit: holds live account IDs,
 # resource inventory and the audit trail)
 .harness
 *.db
