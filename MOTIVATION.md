@@ -47,6 +47,22 @@ comparison.
 The consequence is not a knowledge gap. The concepts are the part that
 works; the interface is the part that costs time and produces error.
 
+### The environment this was built for
+
+A common setting for this work is a managed client machine: a locked-down
+desktop on which the terminal is not the primary interface, access to the
+cloud provider is console-first, and the shell conveniences an operator
+normally relies on are absent, restricted, or unavailable.
+
+Working that way is possible. It is also slow in a way that does not
+appear in any measurement: every operation costs an extra step, and the
+console is frequently the only sanctioned path to an answer.
+
+The harness assumes the opposite starting point — a terminal, one
+vocabulary, explicit targeting and composable output. It also runs
+natively on non-Unix clients, so an operator who cannot choose the
+desktop is not excluded.
+
 ---
 
 ## The design response

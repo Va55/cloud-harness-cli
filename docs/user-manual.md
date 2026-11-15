@@ -393,9 +393,9 @@ refuses with a clear error before contacting AWS; reads and dry-run
 simulations stay available. Covered by 15 dedicated tests. See
 the internal approval checklist kept outside this repository.
 
-### 10b. Windows 11
+### 10b. Windows
 
-The harness runs on Windows 11 natively (Python 3.11+ from python.org,
+The harness runs natively on Windows (Python 3.11+ from python.org,
 then `pip install .`), with the usual AWS setup
 (`%USERPROFILE%\.aws\credentials` — same profile format). Platform
 notes:

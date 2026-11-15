@@ -1,4 +1,4 @@
-# ── AWS Harness installer (Windows 11, native) ──────────────────
+# ── Cloud Harness CLI installer (Windows, native) ───────────────
 # PowerShell 5.1+. One command from a fresh machine:
 #     .\scripts\install.ps1
 # Idempotent: safe to re-run.
