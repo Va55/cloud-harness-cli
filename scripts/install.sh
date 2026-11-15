@@ -58,9 +58,12 @@ python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)' \
 say "Python $PYVER ✓"
 
 # ── 2. Plan ─────────────────────────────────────────────────────────────
+EXTRAS=""
+[ "$WITH_MCP" = "1" ] && EXTRAS="[mcp]"
+
 SPEC="."
 if [ -n "$FROM_GIT" ]; then
-    SPEC="cloud-harness-cli${WITH_MCP:+[mcp]} @ git+$FROM_GIT"
+    SPEC="cloud-harness-cli${EXTRAS} @ git+$FROM_GIT"
 elif [ "$WITH_MCP" = "1" ]; then
     SPEC=".[mcp]"
 fi
@@ -104,7 +107,7 @@ else
 fi
 run "$PY" -m pip install --quiet --upgrade pip
 if [ -z "$FROM_GIT" ]; then
-    run "$PY" -m pip install --quiet "$SPEC_PATH$([ "$WITH_MCP" = "1" ] && echo "[mcp]")"
+    run "$PY" -m pip install --quiet "$SPEC_PATH$EXTRAS"
 else
     run "$PY" -m pip install --quiet "$SPEC"
 fi

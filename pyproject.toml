@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cloud-harness-cli"
-version = "0.1.0"
+version = "0.1.1"
 description = "Multi-account, multi-region AWS management CLI. CLI-first, Python/boto3, team-shared."
 requires-python = ">=3.11"
 license = {text = "Apache-2.0"}
