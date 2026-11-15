@@ -127,3 +127,27 @@ class TestSchemaConstraints:
                     region, service)
                 VALUES (1, 'i-123', '111111111111', 'us-east-1', 'ec2')
             """)
+
+
+class TestPackaging:
+    """Runtime data files must be declared, or installs ship broken.
+
+    Regression: `harness_store/schemas/*.sql` were not in the wheel, so a
+    non-editable install ran zero migrations and every store-backed
+    command failed with "no such table: accounts". Only the installer's
+    --from-git path (a real, non-editable install) exposed it.
+    """
+
+    def test_schema_files_exist_in_source(self):
+
+        from harness_store import database
+
+        schemas = sorted(database.SCHEMA_DIR.glob("v*.sql"))
+        assert len(schemas) >= 4, f"expected migrations, found {schemas}"
+
+    def test_pyproject_declares_package_data(self):
+        from pathlib import Path
+
+        text = Path("pyproject.toml").read_text()
+        assert "[tool.setuptools.package-data]" in text
+        assert "schemas/*.sql" in text, "SQL migrations would not ship"

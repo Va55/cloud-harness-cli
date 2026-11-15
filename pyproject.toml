@@ -62,9 +62,16 @@ cost = "harness_plugins.cost.plugin:CostPlugin"
 security = "harness_plugins.security.plugin:SecurityPlugin"
 inventory = "harness_plugins.inventory.plugin:InventoryPlugin"
 
+# Non-Python files that must ship: the SQL migrations are read at runtime,
+# and without them an installed copy creates an empty database and every
+# store-backed command fails with "no such table".
+[tool.setuptools.package-data]
+harness_store = ["schemas/*.sql"]
+harness_config = ["templates/*.yaml", "examples/*.yaml"]
+
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["harness_primitives*", "harness_plugins*", "harness_cli*", "harness_store*"]
+include = ["harness_primitives*", "harness_plugins*", "harness_cli*", "harness_store*", "harness_config*"]
 
 [tool.ruff]
 target-version = "py311"
