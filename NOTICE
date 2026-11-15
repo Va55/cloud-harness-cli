@@ -1,0 +1,11 @@
+Cloud Harness CLI
+Copyright 2025 the Cloud Harness CLI author
+
+This is an independent personal project. It was designed, written and
+tested on personal time, on personal hardware, using a personally funded
+AWS account. It contains no employer resources, credentials, accounts or
+confidential information, and it is not affiliated with, endorsed by, or
+sponsored by Amazon Web Services. "AWS" is a trademark of Amazon.com, Inc.
+
+This product includes software developed as part of the Python ecosystem
+(boto3, click, typer, rich, FastMCP) under their respective licences.

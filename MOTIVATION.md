@@ -1,6 +1,6 @@
 # Motivation
 
-This document states the problem aws-harness addresses, the design
+This document states the problem Cloud Harness CLI addresses, the design
 response it implements, and the criteria by which the result should be
 judged. Architectural detail lives in `docs/architecture.md`.
 

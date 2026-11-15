@@ -52,7 +52,7 @@ catch {
 Write-Host ""
 Write-Host "✓ Installed. Next:" -ForegroundColor Green
 Write-Host "  1. Credentials: %USERPROFILE%\.aws\credentials (same format as Linux)"
-Write-Host "  2. Config:      %USERPROFILE%\.config\aws-harness\config.yaml"
+Write-Host "  2. Config:      %USERPROFILE%\.config\cloud-harness-cli\config.yaml"
 Write-Host "     (copy from harness_config\templates\config.yaml and edit)"
 Write-Host "  3. Verify:      harness whoami ; harness doctor"
 Write-Host ""

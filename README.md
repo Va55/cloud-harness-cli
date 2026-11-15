@@ -1,4 +1,4 @@
-# AWS Management Harness
+# Cloud Harness CLI
 
 Multi-account, multi-region AWS read and audit surface for a single
 operator. Written in Python/boto3. **One capability set, two
@@ -7,7 +7,7 @@ interfaces** — a CLI you drive, and an MCP server your assistant drives.
 <p>
   <img alt="python 3.11+" src="https://img.shields.io/badge/python-3.11%2B-3776AB?style=flat-square&logo=python&logoColor=white">
   <img alt="tests" src="https://img.shields.io/badge/tests-393%20passing-2ea44f?style=flat-square">
-  <img alt="license" src="https://img.shields.io/badge/license-MIT-lightgrey?style=flat-square">
+  <img alt="license" src="https://img.shields.io/badge/license-Apache_2.0-blue?style=flat-square">
 </p>
 
 **Status.** Phase 1 + 2 complete and exercised against live AWS. Read
@@ -103,10 +103,10 @@ Client registration — one line each:
 
 | Client | Registration |
 |---|---|
-| Pi | `pi mcp add aws-harness -- harness serve-mcp` |
-| Hermes | `hermes mcp add aws-harness --command harness --args serve-mcp` |
-| Claude Code | `claude mcp add aws-harness -- harness serve-mcp` |
-| VS Code | `{"servers":{"aws-harness":{"type":"stdio","command":"harness","args":["serve-mcp"]}}}` in `.vscode/mcp.json` |
+| Pi | `pi mcp add cloud-harness-cli -- harness serve-mcp` |
+| Hermes | `hermes mcp add cloud-harness-cli --command harness --args serve-mcp` |
+| Claude Code | `claude mcp add cloud-harness-cli -- harness serve-mcp` |
+| VS Code | `{"servers":{"cloud-harness-cli":{"type":"stdio","command":"harness","args":["serve-mcp"]}}}` in `.vscode/mcp.json` |
 
 A reasonable first exchange: *"run doctor, then whoami"*. The client
 should report 24 tools. Configuration files, verification and a
@@ -224,10 +224,13 @@ Out of scope by design: provisioning, deletion, drift management
 | [docs/mcp-clients.md](docs/mcp-clients.md) | wiring Pi, Hermes, Claude Code, VS Code |
 | [docs/ai-interface-guide.md](docs/ai-interface-guide.md) | which interface, which model, data governance |
 | [docs/harness-needed_aws-roles.md](docs/harness-needed_aws-roles.md) | IAM policies for each plugin, worked examples |
-| [docs/production-rollout-plan.md](docs/production-rollout-plan.md) | what to present for production access |
 | [docs/architecture.md](docs/architecture.md) | internals, decisions, trade-offs |
 | [MOTIVATION.md](MOTIVATION.md) | why this exists |
 
 ## License
 
-MIT
+Apache License 2.0 — see [LICENSE](LICENSE) and [NOTICE](NOTICE).
+
+Not affiliated with, endorsed by, or sponsored by Amazon Web Services. AWS is a
+trademark of Amazon.com, Inc. This is an independent client that calls the AWS
+public APIs.

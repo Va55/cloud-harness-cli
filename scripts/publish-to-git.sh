@@ -14,7 +14,7 @@ set -euo pipefail
 
 WORK=~/work/aws-harness
 STAGE=$HOME/.cache/aws-harness/git-stage
-REMOTE=ssh://giada/tank/git/aws-harness.git
+REMOTE=ssh://giada/tank/git/cloud-harness-cli.git
 MAP=$HOME/.config/aws-harness/sanitize-map.tsv
 
 say() { printf '» %s\n' "$*"; }
@@ -47,11 +47,15 @@ rsync -a --delete \
       --exclude='.mypy_cache' --exclude='*.egg-info' \
       --exclude='.git' --exclude='.coverage' --exclude='infra/' \
       --exclude='PROJECT_LOG.md' \
+      --exclude='docs/notes/' \
+      --exclude='docs/production-rollout-plan.md' \
       "$WORK/" "$STAGE/"
 
 # the development log is private (kept on the operator's machine): ensure
 # it is gone from the stage even if an earlier publish carried it
 rm -f "$STAGE/PROJECT_LOG.md"
+rm -rf "$STAGE/docs/notes"
+rm -f "$STAGE/docs/production-rollout-plan.md"
 
 # 2. sanitize from the LOCAL map (never committed)
 say "sanitizing from $MAP …"
@@ -113,7 +117,7 @@ git push -q giada main
 say "pushed to giada ✓"
 
 # GitHub mirror (optional): set it up once with
-#   git -C "$STAGE" remote add github https://github.com/Va55/aws-harness.git
+#   git -C "$STAGE" remote add github https://github.com/Va55/cloud-harness-cli.git
 if git remote get-url github >/dev/null 2>&1; then
     say "pushing to github …"
     git push -q github main

@@ -124,7 +124,7 @@ def on_page(canvas, doc):
     if doc.page > 1:
         canvas.setFont("Helvetica", 8)
         canvas.setFillColor(MUTED)
-        canvas.drawString(2 * cm, 1.2 * cm, "AWS Harness — User Manual")
+        canvas.drawString(2 * cm, 1.2 * cm, "Cloud Harness CLI — User Manual")
         canvas.drawRightString(A4[0] - 2 * cm, 1.2 * cm, f"page {doc.page}")
         canvas.setStrokeColor(colors.HexColor("#d5dde5"))
         canvas.line(2 * cm, 1.6 * cm, A4[0] - 2 * cm, 1.6 * cm)
@@ -148,8 +148,8 @@ def build(out_path):
     doc = ManualDoc(out_path, pagesize=A4,
                     leftMargin=2 * cm, rightMargin=2 * cm,
                     topMargin=2 * cm, bottomMargin=2.2 * cm,
-                    title="AWS Harness — User Manual",
-                    author="aws-harness project")
+                    title="Cloud Harness CLI — User Manual",
+                    author="Cloud Harness CLI project")
     frame = Frame(doc.leftMargin, doc.bottomMargin, doc.width, doc.height,
                   id="normal")
     doc.addPageTemplates([PageTemplate(id="main", frames=[frame],
@@ -165,7 +165,7 @@ def build(out_path):
 
     # cover
     story.append(Spacer(1, 5 * cm))
-    story.append(Paragraph("AWS Harness", ParagraphStyle(
+    story.append(Paragraph("Cloud Harness CLI", ParagraphStyle(
         "title", fontName="Helvetica-Bold", fontSize=34, leading=40,
         textColor=INK, alignment=1)))
     story.append(Spacer(1, 0.4 * cm))
@@ -223,7 +223,7 @@ def build(out_path):
     story.append(h1("2 · Quick start", toc))
     story.append(code(
         "# install (from the repo)\n"
-        "cd ~/work/aws-harness && pip install -e . --break-system-packages\n"
+        "cd ~/work/cloud-harness-cli && pip install -e . --break-system-packages\n"
         "\n"
         "# 1. create your config (see §4) — or import from a spreadsheet:\n"
         "python3 scripts/import-accounts-xlsx.py accounts.xlsx \\\n"
@@ -407,9 +407,9 @@ def build(out_path):
         "core. Wire-up:"))
     story.append(code(
         '# pi / Claude Code:\n'
-        'claude mcp add aws-harness -- harness serve-mcp\n'
+        'claude mcp add cloud-harness-cli -- harness serve-mcp\n'
         '# VSCode settings.json (agent mode):\n'
-        '"mcp": {"servers": {"aws-harness":\n'
+        '"mcp": {"servers": {"cloud-harness-cli":\n'
         '    {"command": "harness", "args": ["serve-mcp"]}}}'))
     story.extend(shot("mcp", "Figure 15 — the 17 tools the server exposes"))
     story.append(body(
@@ -493,7 +493,7 @@ def build(out_path):
           "Governance-level restrictions; --refresh re-detects "
           "enablement, --region targets a specific region."],
          ["[WARN] this org blocks session tags / source identity",
-          "The org's governance denies sts:TagSession/SetSourceIdentity "
+          "If an organisation denies sts:TagSession/SetSourceIdentity "
           "— the harness degrades to RoleSessionName attribution and "
           "continues (expected, safe)."],
          ["Exit 1 vs 2",
@@ -526,7 +526,7 @@ def build(out_path):
         "For approval-ready material — scope tables, the lock's "
         "technical explanation, risk analysis, staged rollout, "
         "instant-abort procedure, and the read-only IAM policy — see "
-        "docs/production-rollout-plan.md in the repository. Summary: "
+        "an internal approval checklist is used before production access. Summary: "
         "read-only IAM user per business + read_only: true in config = "
         "the tool can look but never touch."))
     story.append(h1("Appendix B · Glossary", toc))

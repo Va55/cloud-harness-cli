@@ -2,7 +2,7 @@
 # Initialize harness database with schema migrations
 set -euo pipefail
 
-DB_DIR="${HARNESS_DB_DIR:-$HOME/.cache/aws-harness}"
+DB_DIR="${HARNESS_DB_DIR:-$HOME/.cache/cloud-harness-cli}"
 mkdir -p "$DB_DIR"
 
 INVENTORY_DB="$DB_DIR/inventory.db"

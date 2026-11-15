@@ -9,7 +9,7 @@
 ## 1. Project Structure
 
 ```
-aws-harness/
+cloud-harness-cli/
 ├── pyproject.toml                # Project config, dependencies, entry points
 ├── README.md
 ├── .env.example                  # Template for env vars
@@ -1277,11 +1277,11 @@ def get_db_connection(db_path: Path) -> sqlite3.Connection:
 ```toml
 # pyproject.toml
 [project]
-name = "aws-harness"
+name = "cloud-harness-cli"
 version = "0.1.0"
 description = "Multi-account AWS management harness"
 requires-python = ">=3.11,<3.13"
-license = {text = "MIT"}
+license = {text = "Apache-2.0"}
 
 dependencies = [
     # Core
@@ -1537,7 +1537,7 @@ moto limitations (note for test planning):
 pip install -e .
 
 # Install from PyPI (future)
-pip install aws-harness
+pip install cloud-harness-cli
 
 # Distribution
 python -m build

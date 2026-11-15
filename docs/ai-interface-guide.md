@@ -29,7 +29,7 @@ is the point of the MCP surface being a strict subset of the CLI.
 | 1 | **The CLI** (`harness …`) | none | everything — the primary interface; scripts, cron, muscle memory |
 | 2 | **`harness ask`** | **none** (deterministic router) | faster than typing full commands; the safety of no-AI: it can only pick real commands |
 | 3 | **`serve-mcp` + local model** | local | conversational exploration; data stays in-house |
-| 4 | **`serve-mcp` + sanctioned API** | cloud | at work / sanctioned endpoints; best-in-class reliability |
+| 4 | **`serve-mcp` + managed API** | cloud | a sanctioned organisational endpoint; best-in-class reliability |
 
 **No option changes what the harness is allowed to do** — the
 `read_only` lock, dry-run defaults, and audit trail apply to all of
@@ -81,11 +81,11 @@ Cursor) with verification and troubleshooting: **docs/mcp-clients.md**.*
 
 ```bash
 # pi / Claude Code:
-claude mcp add aws-harness -- harness serve-mcp
-pi mcp add aws-harness -- harness serve-mcp
+claude mcp add cloud-harness-cli -- harness serve-mcp
+pi mcp add cloud-harness-cli -- harness serve-mcp
 
 # VSCode settings.json (agent mode):
-"mcp": {"servers": {"aws-harness":
+"mcp": {"servers": {"cloud-harness-cli":
     {"command": "harness", "args": ["serve-mcp"]}}}
 
 # Cursor / any MCP client: same pattern — command `harness`,
@@ -101,7 +101,7 @@ ec2_*, s3_*, iam_*, vpc_list, backup_*, cost_total, safe_op_dry_run).
 | Brain | Pros | Cons |
 |---|---|---|
 | **Local small model** (proven: a 2B instruct at Q4, ~1.5 GB) | private — AWS data stays in-house; free; offline | slower; needs the right serving flags (below) |
-| **Cloud, sanctioned API** (e.g., a Haiku-class model at work) | fastest, most reliable, best MCP behavior | tool results transit the provider; only use a **sanctioned** endpoint for company data |
+| **Cloud, sanctioned API** (an approved organisational endpoint) | fastest, most reliable, best MCP behavior | tool results transit the provider; only use a **sanctioned** endpoint for company data |
 | **Local large model** (a 30B+ instruct on GPU) | best of both | needs the hardware |
 
 **Empirical floor (tested, not guessed):** a 2B-class instruct model
@@ -149,11 +149,11 @@ Whatever brain is attached **sees every tool result**: account IDs,
 resource inventories, IAM user lists, security findings. Ask one
 question:
 
-- **Company/sensitive data** → use a sanctioned endpoint (or local),
+- **Sensitive organisational data** → use a sanctioned endpoint (or local),
   never a random public API; and the production rollout plan
   should say out loud that an AI sees the inventory as part of "the
   tool looks"
-- **Personal/sandbox data** → any brain you like
+- **Personal/laboratory data** → any model you like
 
 The audit trail records which interface did what either way:
 CLI actions as `harness-<user>`, MCP actions as `harness:mcp`.
@@ -179,7 +179,7 @@ Tool definitions are loaded at process start on both sides — a
 mid-session upgrade leaves both layers stale in different ways:
 
 1. **the server**: `harness serve-mcp` imports tool decorators at
-   startup → `pi mcp remove aws-harness && pi mcp add aws-harness
+   startup → `pi mcp remove cloud-harness-cli && pi mcp add cloud-harness-cli
    -- harness serve-mcp` (or restart the host process)
 2. **the client session**: the codemode/tool registry caches tool
    definitions from session start → **restart the session** to see
@@ -194,4 +194,4 @@ still saw 17 until restart.)
 
 *Related docs: user-manual.md §10 (ask) and §11 (serve-mcp reference) ·
 architecture.md §13 (the three-tier design) ·
-production-rollout-plan.md (approvals for company data).*
+and the approvals document kept internally.*

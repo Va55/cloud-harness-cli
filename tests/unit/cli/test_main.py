@@ -20,7 +20,7 @@ class TestGlobalOptions:
     def test_version(self):
         result = runner.invoke(app, ["version"])
         assert result.exit_code == 0
-        assert "aws-harness" in result.output
+        assert "cloud-harness-cli" in result.output
 
     def test_global_options_parse(self):
         """Global options must be accepted before a command (audit finding #1)."""

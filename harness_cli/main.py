@@ -311,10 +311,13 @@ def version():
     """Show version info."""
     import importlib.metadata
     try:
-        v = importlib.metadata.version("aws-harness")
+        try:
+            v = importlib.metadata.version("cloud-harness-cli")
+        except importlib.metadata.PackageNotFoundError:
+            v = importlib.metadata.version("aws-harness")  # pre-rename install
     except importlib.metadata.PackageNotFoundError:
         v = "0.1.0-dev"
-    typer.echo(f"aws-harness {v}")
+    typer.echo(f"cloud-harness-cli {v}")
 
 
 @app.command()

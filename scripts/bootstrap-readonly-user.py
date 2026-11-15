@@ -3,7 +3,7 @@
 """Bootstrap the read-only IAM user for a production rollout (Stage 0).
 
 This is the script the business owner (or their admin) runs ONCE per
-business, as described in docs/production-rollout-plan.md §6:
+business (an internal approval is expected first):
 
   1. creates an IAM user  <name>  (default: harness-readonly)
   2. attaches the read-only policy from the plan's Appendix B

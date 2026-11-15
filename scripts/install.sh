@@ -28,14 +28,14 @@ if [ "${SKIP_VENV:-0}" = "1" ]; then
     python3 -m pip install "${PIP_FLAGS[@]}" -e . -q
     BINDIR="$HOME/.local/bin"
 else
-    say "Creating venv at ~/.venvs/aws-harness"
-    python3 -m venv "$HOME/.venvs/aws-harness"
+    say "Creating venv at ~/.venvs/cloud-harness-cli"
+    python3 -m venv "$HOME/.venvs/cloud-harness-cli"
     # shellcheck disable=SC1091
-    source "$HOME/.venvs/aws-harness/bin/activate"
+    source "$HOME/.venvs/cloud-harness-cli/bin/activate"
     python3 -m pip install -q --upgrade pip
     python3 -m pip install -q -e . ".[test]" 2>/dev/null \
         || python3 -m pip install -q -e .
-    BINDIR="$HOME/.venvs/aws-harness/bin"
+    BINDIR="$HOME/.venvs/cloud-harness-cli/bin"
 fi
 
 # 3. PATH check

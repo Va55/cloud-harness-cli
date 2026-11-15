@@ -47,7 +47,7 @@ unless you want a per-project config (`HARNESS_CONFIG`).
 ## Pi
 
 ```bash
-pi mcp add aws-harness -- harness serve-mcp
+pi mcp add cloud-harness-cli -- harness serve-mcp
 pi mcp list                       # → connected, 24 tools
 ```
 
@@ -55,32 +55,32 @@ pi mcp list                       # → connected, 24 tools
   file `.pi/mcp.json`
 - inside a session: `/mcp` to inspect/reconnect,
   `/reload` after external changes
-- tools reach the model as `mcp__aws-harness__<tool>` and are callable
+- tools reach the model as `mcp__cloud-harness-cli__<tool>` and are callable
   from codemode as `mcp__aws_harness.<tool>`
 - JSON equivalent:
 
 ```json
-{"mcpServers": {"aws-harness": {"command": "harness", "args": ["serve-mcp"]}}}
+{"mcpServers": {"cloud-harness-cli": {"command": "harness", "args": ["serve-mcp"]}}}
 ```
 
-✅ Verified: `aws-harness: connected, 24 tools (codemode, global)`.
+✅ Verified: `cloud-harness-cli: connected, 24 tools (codemode, global)`.
 
 ## Hermes
 
 ```bash
-hermes mcp add aws-harness --command harness --args serve-mcp
-hermes mcp test aws-harness       # connection + tool discovery
+hermes mcp add cloud-harness-cli --command harness --args serve-mcp
+hermes mcp test cloud-harness-cli       # connection + tool discovery
 hermes mcp list                   # → ✓ enabled
 ```
 
 - the add is interactive: it asks **"Enable all 24 tools? [Y/n/select]"**
   — answer `Y` (or `select` to expose only some; `hermes mcp configure
-  aws-harness` changes it later)
-- non-interactive/scripted: `printf 'Y\n' | hermes mcp add aws-harness
+  cloud-harness-cli` changes it later)
+- non-interactive/scripted: `printf 'Y\n' | hermes mcp add cloud-harness-cli
   --command harness --args serve-mcp`
 - config lands in `~/.hermes/config.yaml`
 - running sessions need `/reload-mcp` (or a new session)
-- remove with `hermes mcp remove aws-harness`
+- remove with `hermes mcp remove cloud-harness-cli`
 
 ✅ Verified: `✓ Connected (1649ms) · ✓ Tools discovered: 24`,
 `24/24 tools enabled`.
@@ -88,8 +88,8 @@ hermes mcp list                   # → ✓ enabled
 ## Claude Code
 
 ```bash
-claude mcp add aws-harness -- harness serve-mcp      # project/local scope
-claude mcp add --scope user aws-harness -- harness serve-mcp   # all projects
+claude mcp add cloud-harness-cli -- harness serve-mcp      # project/local scope
+claude mcp add --scope user cloud-harness-cli -- harness serve-mcp   # all projects
 claude mcp list
 ```
 
@@ -97,7 +97,7 @@ claude mcp list
 - JSON equivalents: project `.mcp.json`, or user `~/.claude.json`
 
 ```json
-{"mcpServers": {"aws-harness": {"type": "stdio",
+{"mcpServers": {"cloud-harness-cli": {"type": "stdio",
   "command": "harness", "args": ["serve-mcp"]}}}
 ```
 
@@ -117,7 +117,7 @@ you need the legacy one.
 // ~/.copilot/mcp-config.json  (global)  or  <workspace>/.mcp.json
 {
   "mcpServers": {
-    "aws-harness": {
+    "cloud-harness-cli": {
       "type": "stdio",
       "command": "harness",
       "args": ["serve-mcp"]
@@ -135,7 +135,7 @@ Copilot Global*, and give the command `harness` with argument
 
 ```json
 // .vscode/mcp.json
-{"servers": {"aws-harness": {"type": "stdio",
+{"servers": {"cloud-harness-cli": {"type": "stdio",
   "command": "harness", "args": ["serve-mcp"]}}}
 ```
 
@@ -149,7 +149,7 @@ Almost every client accepts the same stdio entry (`mcpServers`,
 `command` + `args`):
 
 ```json
-{"mcpServers": {"aws-harness": {"command": "harness", "args": ["serve-mcp"]}}}
+{"mcpServers": {"cloud-harness-cli": {"command": "harness", "args": ["serve-mcp"]}}}
 ```
 
 If a client only supports HTTP transport, bridge it locally:
@@ -165,7 +165,7 @@ npx -y supergateway --stdio "harness serve-mcp" --port 8811
 
 Any client, one question is enough:
 
-> "Use the aws-harness tools: run `doctor`, then `whoami`."
+> "Use the cloud-harness-cli tools: run `doctor`, then `whoami`."
 
 Expected: `doctor` reports credentials OK + 11 plugins; `whoami`
 returns your ARN with source identity `harness-<user>`. The client's
@@ -206,4 +206,4 @@ tool registry is read at session start.
 *Related: `ai-interface-guide.md` (which interface, which model) ·
 `user-manual.md` §11 (tool reference) ·
 `harness-needed_aws-roles.md` (IAM for each tool) ·
-`production-rollout-plan.md` (company-data approvals).*
+the internal approvals checklist (not published).*

@@ -29,7 +29,7 @@ Terraform/CDK).
 
 ```bash
 # install (from the repo)
-cd ~/work/aws-harness
+cd ~/work/cloud-harness-cli
 pip install -e . --break-system-packages
 
 # 1. create your config (see §4) — or import from your accounts
@@ -294,9 +294,9 @@ missing instead of inventing one.
 
 ```bash
 # pi / Claude Code:
-claude mcp add aws-harness -- harness serve-mcp
+claude mcp add cloud-harness-cli -- harness serve-mcp
 # VSCode settings.json (agent mode):
-"mcp": {"servers": {"aws-harness":
+"mcp": {"servers": {"cloud-harness-cli":
     {"command": "harness", "args": ["serve-mcp"]}}}
 ```
 
@@ -391,7 +391,7 @@ Precedence: account `read_only` > business > defaults. Every mutating
 command (start/stop, rotate-keys, invalidate, invoke, start-backup)
 refuses with a clear error before contacting AWS; reads and dry-run
 simulations stay available. Covered by 15 dedicated tests. See
-**docs/production-rollout-plan.md** for the approval document.
+the internal approval checklist kept outside this repository.
 
 ### 10b. Windows 11
 

@@ -20,9 +20,9 @@ Design (DeepSeek-reviewed, Phase 2b):
 
 Client wiring:
     # pi / Claude Code:
-    claude mcp add aws-harness -- harness serve-mcp
+    claude mcp add cloud-harness-cli -- harness serve-mcp
     # VSCode settings.json (agent mode):
-    "mcp": {"servers": {"aws-harness":
+    "mcp": {"servers": {"cloud-harness-cli":
         {"command": "harness", "args": ["serve-mcp"]}}}
 """
 
@@ -38,7 +38,7 @@ MAX_ROWS = 50          # context-window guard
 MCP_AUDIT_ID = "harness:mcp"   # audit principal for MCP-origin actions
 
 mcp = FastMCP(
-    "aws-harness",
+    "cloud-harness-cli",
     instructions="AWS management harness: read-only AWS visibility "
                  "across accounts/businesses/regions + dry-run "
                  "simulations of safe operations. Mutations execute "
