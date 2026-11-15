@@ -445,8 +445,16 @@ def account_list(
                                f"{e2}", err=True)
 
         biz = get_ctx().get("business")
-        accounts = resolver.resolve_all(business=biz,
-                                        include_suspended=include_suspended)
+        try:
+            accounts = resolver.resolve_all(business=biz,
+                                            include_suspended=include_suspended)
+        except Exception as e:          # noqa: BLE001 — always actionable
+            # Discovery can fail for reasons the operator must see plainly:
+            # a profile that is not configured, an org the caller cannot read.
+            typer.echo(f"Cannot resolve accounts: {e}", err=True)
+            typer.echo("Check the profile names in your config and run "
+                       "'harness doctor'.", err=True)
+            raise typer.Exit(2) from e
         g = get_ctx()
         if g.get("output") == "json":
             import json as _json

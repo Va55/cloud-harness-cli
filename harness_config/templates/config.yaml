@@ -21,24 +21,17 @@ accounts:
   # templates expand {account_id} within the business.
   # Use:  harness --business acme iam list-users --account prod
   #       harness --business acme --all-accounts ec2 list-instances
-  businesses:
-    - name: acme
-      profile: acme              # that business's own credentials
-      role_arn: "arn:aws:iam::{account_id}:role/OpsAccess"
-      external_id: harness-acme  # cross-account confused-deputy guard
-      read_only: false           # PRODUCTION SAFETY LOCK: true =
-                                 # mutations refused for the whole
-                                 # business, in code (see docs/
-                                 # production-rollout-plan.md)
-      discovery: organizations  # or: manual (+ accounts: below)
-      default_account: prod     # `--business acme` with no --account
-      # accounts:               # manual mode only
-      #   - id: "111111111111"
-      #     name: prod
-      #     regions: [us-east-1, eu-west-1]
-    # - name: globex
-    #   profile: globex
-    #   ...
+  # Examples are inert on purpose: an active placeholder business would
+  # send discovery looking for a profile that does not exist.
+  # To use businesses, replace `businesses: []` with entries like:
+  #   - name: acme
+  #     profile: acme
+  #     role_arn: "arn:aws:iam::{account_id}:role/OpsAccess"
+  #     external_id: harness-acme
+  #     read_only: false            # true = mutations refused in code
+  #     discovery: organizations
+  #     default_account: prod
+  businesses: []
 
   # Default settings for all accounts
   defaults:

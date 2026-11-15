@@ -273,3 +273,42 @@ class TestReadOnlyMcp:
         payload = json.loads(result[0].text)
         assert payload["simulated"] is True
         cli_main._CTX.update({"config": None})
+
+
+class TestAccountListGracefulFailure:
+    """`account list` must not traceback when resolution fails.
+
+    Regression: with the shipped template (an example business pointing at
+    a profile that does not exist) the command died with a Rich traceback
+    instead of an actionable message. Found by proving the installer's
+    --from-git path in a pristine HOME.
+    """
+
+    def test_resolution_error_exits_2_with_guidance(self, monkeypatch, capsys):
+        from typer.testing import CliRunner
+
+        import harness_cli.main as cli_main
+        from harness_primitives.failure import FailureCategory, HarnessError
+
+        class Boom:
+            def resolve_all(self, **kwargs):
+                raise HarnessError("profile 'acme' not found",
+                                   FailureCategory.PERMISSION)
+
+        # build_stack is imported inside the command, so patch its module
+        import harness_cli.runtime as runtime
+
+        monkeypatch.setattr(runtime, "build_stack",
+                            lambda cfg: (None, None, Boom(), _FakeExec()))
+        result = CliRunner().invoke(
+            cli_main.app, ["account", "list", "--discovery", "manual"])
+        assert result.exit_code == 2
+        out = result.output
+        assert "Cannot resolve accounts" in out
+        assert "harness doctor" in out
+        assert "Traceback" not in out
+
+
+class _FakeExec:
+    def shutdown(self):
+        pass
