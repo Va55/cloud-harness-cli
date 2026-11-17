@@ -119,17 +119,31 @@ class OrgPlugin(BasePlugin):
         ):
             """List all accounts in the organization."""
             from harness_cli.main import get_ctx
-            from harness_cli.runtime import build_stack, emit, get_runtime
+            from harness_cli.runtime import (
+                build_stack, emit, get_runtime, resolve_accounts,
+            )
+            from harness_primitives.output import FailureMsg, PartialResult
 
             config = get_runtime(get_ctx().get("config"))
             store, session, resolver, executor = build_stack(config)
             try:
-                acct = resolver.resolve(account)
-                sess = executor.session_for(acct)
-                rows = list(plugin.list_accounts(sess))
-                from harness_primitives.output import PartialResult
-                emit(PartialResult(success={"accounts": rows}),
-                     get_ctx().get("output", "table"))
+                accounts = resolve_accounts(resolver, account, False)
+                result = PartialResult()
+                for acct in accounts:
+                    try:
+                        sess = executor.session_for(acct)
+                        result.success[acct.id] = list(
+                            plugin.list_accounts(sess))
+                    except Exception as e:
+                        # Members are denied org reads by design — a
+                        # failure entry, never a raw traceback.
+                        err = getattr(e, "response", {}).get("Error", {})
+                        result.failures.append(FailureMsg(
+                            account_id=acct.id, service="org",
+                            error_code=err.get("Code", type(e).__name__),
+                            message=str(err.get("Message", e))[:300],
+                        ))
+                emit(result, get_ctx().get("output", "table"))
             finally:
                 executor.shutdown()
 
@@ -139,17 +153,28 @@ class OrgPlugin(BasePlugin):
         ):
             """List the root and all OUs (recursive)."""
             from harness_cli.main import get_ctx
-            from harness_cli.runtime import build_stack, emit, get_runtime
+            from harness_cli.runtime import (
+                build_stack, emit, get_runtime, resolve_accounts,
+            )
+            from harness_primitives.output import FailureMsg, PartialResult
 
             config = get_runtime(get_ctx().get("config"))
             store, session, resolver, executor = build_stack(config)
             try:
-                acct = resolver.resolve(account)
-                sess = executor.session_for(acct)
-                rows = list(plugin.list_ous(sess))
-                from harness_primitives.output import PartialResult
-                emit(PartialResult(success={"ous": rows}),
-                     get_ctx().get("output", "table"))
+                accounts = resolve_accounts(resolver, account, False)
+                result = PartialResult()
+                for acct in accounts:
+                    try:
+                        sess = executor.session_for(acct)
+                        result.success[acct.id] = list(plugin.list_ous(sess))
+                    except Exception as e:
+                        err = getattr(e, "response", {}).get("Error", {})
+                        result.failures.append(FailureMsg(
+                            account_id=acct.id, service="org",
+                            error_code=err.get("Code", type(e).__name__),
+                            message=str(err.get("Message", e))[:300],
+                        ))
+                emit(result, get_ctx().get("output", "table"))
             finally:
                 executor.shutdown()
 

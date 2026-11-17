@@ -122,11 +122,7 @@ class IAMPlugin(BasePlugin):
             all_accounts: bool = typer.Option(False, "--all-accounts"),
         ):
             """List IAM roles."""
-            _sweep(lambda s: [
-                {k: v for k, v in r.items() if k in
-                 ("RoleName", "Arn", "CreateDate", "Path", "RoleId")}
-                for r in plugin.list_roles(s)
-            ], account, all_accounts)
+            _sweep(lambda s: list(plugin.list_roles(s)), account, all_accounts)
 
         @iam_app.command("list-access-keys")
         def list_access_keys_cmd(
@@ -152,9 +148,11 @@ class IAMPlugin(BasePlugin):
             output: Optional[str] = typer.Option(
                 None, "--output-file",
                 help="Write the new secret to this file (default: cache dir, 0600)"),
+            yes: bool = typer.Option(
+                False, "--yes", help="Execute for real (default: dry-run)"),
             dry_run: bool = typer.Option(
                 False, "--dry-run",
-                help="Show what would rotate without touching any keys"),
+                help="Force simulation (the default)"),
         ):
             """Rotate access keys. Secret goes to a 0600 file, never stdout."""
             from harness_cli.main import get_ctx
@@ -172,8 +170,11 @@ class IAMPlugin(BasePlugin):
             try:
                 acct = resolver.resolve(account)
                 sess = executor.session_for(acct)
-                ensure_mutable(acct)
-                effective_dry_run = bool(dry_run or get_ctx().get("dry_run"))
+                effective_dry_run = bool(
+                    dry_run or get_ctx().get("dry_run") or not yes)
+                # read_only blocks REAL executions only; dry-runs are reads
+                if not effective_dry_run:
+                    ensure_mutable(acct)
                 try:
                     if effective_dry_run:
                         # Read-only simulation: show current keys, no changes

@@ -224,7 +224,10 @@ class BackupPlugin(BasePlugin):
                                        "assumes"),
             account: Optional[str] = typer.Option(None, "--account"),
             region: Optional[str] = typer.Option(None, "--region"),
-            dry_run: bool = typer.Option(False, "--dry-run"),
+            yes: bool = typer.Option(
+                False, "--yes", help="Execute for real (default: dry-run)"),
+            dry_run: bool = typer.Option(
+                False, "--dry-run", help="Force simulation (the default)"),
         ):
             """Start an on-demand backup job (SAFE OP — dry-run default)."""
             from harness_cli.main import get_ctx
@@ -242,9 +245,11 @@ class BackupPlugin(BasePlugin):
             try:
                 acct = resolver.resolve(account)
                 sess = executor.session_for(acct)
-                ensure_mutable(acct)
                 effective_dry_run = bool(
-                    dry_run or get_ctx().get("dry_run"))
+                    dry_run or get_ctx().get("dry_run") or not yes)
+                # read_only blocks REAL executions only; dry-runs are reads
+                if not effective_dry_run:
+                    ensure_mutable(acct)
                 try:
                     if effective_dry_run:
                         data = plugin.dry_run_simulate(

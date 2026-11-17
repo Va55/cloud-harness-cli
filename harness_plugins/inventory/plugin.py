@@ -316,6 +316,14 @@ class InventoryPlugin(BasePlugin):
             plugin = self._get_service_plugin(service)
 
             for account in accounts:
+                # One snapshot per (account, region, service) per run —
+                # NOT per resource type. Readers (summarize/show/export)
+                # select the latest snapshot per (account, region, service);
+                # per-type snapshots made them see only one type's rows.
+                regions = ([region] if region else self._regions_for(
+                    account, config, session_by_account[account.id], store
+                ))
+                collected: dict[str, list[dict]] = {}
                 for res_type in plan["types"]:
                     key = f"{account.id}:{service}:{res_type}"
                     try:
@@ -324,20 +332,13 @@ class InventoryPlugin(BasePlugin):
                             rows = list(
                                 plugin.list_resources(sess, None, type=res_type)
                             )
-                            self._store_snapshot(
-                                store, account.id, "_global", service, rows
-                            )
+                            collected.setdefault("_global", []).extend(rows)
                         else:
-                            regions = ([region] if region else self._regions_for(
-                                account, config, sess, store
-                            ))
                             for r in regions:
                                 rows = list(
                                     plugin.list_resources(sess, r, type=res_type)
                                 )
-                                self._store_snapshot(
-                                    store, account.id, r, service, rows
-                                )
+                                collected.setdefault(r, []).extend(rows)
                         result.success[key] = {"collected": True}
                     except Exception as e:
                         err = getattr(e, "response", {}).get("Error", {})
@@ -347,6 +348,8 @@ class InventoryPlugin(BasePlugin):
                             error_code=err.get("Code", type(e).__name__),
                             message=str(err.get("Message", e))[:200],
                         ))
+                for r, rows in collected.items():
+                    self._store_snapshot(store, account.id, r, service, rows)
         return result
 
     def _get_service_plugin(self, service: str) -> BasePlugin:

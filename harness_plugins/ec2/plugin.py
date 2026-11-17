@@ -186,7 +186,21 @@ class EC2Plugin(BasePlugin):
             try:
                 acct = resolver.resolve(account)
                 sess = executor.session_for(acct)
-                inst = plugin.get_resource(sess, instance_id, region)
+                try:
+                    inst = plugin.get_resource(sess, instance_id, region)
+                except Exception as e:
+                    # Never a raw traceback (project rule): malformed IDs,
+                    # permission drift etc. land in the failure block.
+                    err = getattr(e, "response", {}).get("Error", {})
+                    from harness_primitives.output import FailureMsg, PartialResult
+                    result = PartialResult()
+                    result.failures.append(FailureMsg(
+                        account_id=acct.id, region=region, service="ec2",
+                        error_code=err.get("Code", type(e).__name__),
+                        message=str(err.get("Message", e))[:300],
+                    ))
+                    emit(result, get_ctx().get("output", "table"))
+                    raise typer.Exit(result.exit_code)
                 if inst is None:
                     typer.echo(f"Instance {instance_id} not found in {region}", err=True)
                     raise typer.Exit(1)
@@ -200,22 +214,32 @@ class EC2Plugin(BasePlugin):
         def start(
             instance_id: str = typer.Argument(...),
             account: Optional[str] = typer.Option(None, "--account"),
-            region: str = typer.Option(..., "--region"),
-            dry_run: bool = typer.Option(False, "--dry-run"),
+            region: Optional[str] = typer.Option(
+                None, "--region", help="Region (auto-detected if omitted)"),
+            yes: bool = typer.Option(
+                False, "--yes", help="Execute for real (default: dry-run)"),
+            dry_run: bool = typer.Option(
+                False, "--dry-run", help="Force simulation (the default)"),
         ):
-            """Start an instance (safe op)."""
-            _run_safe_op(plugin, "start", instance_id, account, region, dry_run)
+            """Start an instance (safe op — dry-run by default)."""
+            _run_safe_op(plugin, "start", instance_id, account, region,
+                         yes, dry_run)
 
         @ec2_app.command("stop")
         def stop(
             instance_id: str = typer.Argument(...),
             account: Optional[str] = typer.Option(None, "--account"),
-            region: str = typer.Option(..., "--region"),
+            region: Optional[str] = typer.Option(
+                None, "--region", help="Region (auto-detected if omitted)"),
             force: bool = typer.Option(False, "--force"),
-            dry_run: bool = typer.Option(False, "--dry-run"),
+            yes: bool = typer.Option(
+                False, "--yes", help="Execute for real (default: dry-run)"),
+            dry_run: bool = typer.Option(
+                False, "--dry-run", help="Force simulation (the default)"),
         ):
-            """Stop an instance (safe op)."""
-            _run_safe_op(plugin, "stop", instance_id, account, region, dry_run, force=force)
+            """Stop an instance (safe op — dry-run by default)."""
+            _run_safe_op(plugin, "stop", instance_id, account, region,
+                         yes, dry_run, force=force)
 
         @ec2_app.command("security-groups")
         def security_groups(
@@ -382,23 +406,37 @@ class EC2Plugin(BasePlugin):
         raise error
 
 
-def _merged_dry_run(cmd_flag: bool) -> bool:
-    """Merge the per-command --dry-run with the global one.
-
-    The global flag must never be a silent no-op (audit pass 2, #1):
-    `harness --dry-run ec2 stop i-123` must NOT stop the instance.
+def _effective_dry_run(yes: bool, dry_run: bool) -> bool:
+    """Safety contract (user-manual §8): safe ops run DRY by default;
+    --yes executes for real. The global --dry-run always forces a
+    simulation, even combined with --yes — it must never be a
+    silent no-op (audit pass 2, #1).
     """
     from harness_cli.main import get_ctx
-    return bool(cmd_flag or get_ctx().get("dry_run"))
+    return bool(dry_run or get_ctx().get("dry_run") or not yes)
+
+
+def _locate_instance(sess, acct, config, store, plugin, instance_id) -> "str | None":
+    """Find which in-scope region holds the instance (reads only).
+
+    Lets `ec2 start/stop` and `ask` work without --region; refuses
+    cleanly when the instance exists nowhere in scope.
+    """
+    from harness_cli.runtime import regions_for
+    for r in regions_for(acct, config, sess, store):
+        if plugin.get_resource(sess, instance_id, r) is not None:
+            return r
+    return None
 
 
 def _run_safe_op(plugin, operation, instance_id, account, region,
-                 dry_run, **params):
+                 yes, dry_run, **params):
     """Shared runner for start/stop commands.
 
-    Merges the global --dry-run flag, records the action in the local
-    audit trail, and reports failures through PartialResult (never a
-    raw traceback).
+    Dry-run by default; --yes executes for real (and then only on
+    accounts without the read_only lock). Records the action in the
+    local audit trail and reports failures through PartialResult
+    (never a raw traceback).
     """
     from harness_cli.main import get_ctx
     from harness_cli.runtime import (
@@ -415,8 +453,25 @@ def _run_safe_op(plugin, operation, instance_id, account, region,
     try:
         acct = resolver.resolve(account)
         sess = executor.session_for(acct)
-        ensure_mutable(acct)
-        effective_dry_run = _merged_dry_run(dry_run)
+        effective_dry_run = _effective_dry_run(yes, dry_run)
+        # The read_only lock blocks REAL executions only — dry-runs
+        # are reads by definition (see ensure_mutable's contract).
+        if not effective_dry_run:
+            ensure_mutable(acct)
+        if region is None:
+            region = _locate_instance(sess, acct, config, store,
+                                     plugin, instance_id)
+            if region is None:
+                result = PartialResult()
+                result.failures.append(FailureMsg(
+                    account_id=acct.id, service="ec2",
+                    error_code="NotFound",
+                    message=f"Instance {instance_id} not found in any "
+                            f"in-scope region for account {acct.id} "
+                            "(pass --region explicitly to override)",
+                ))
+                emit(result, get_ctx().get("output", "table"))
+                return
         try:
             result_data = plugin.safe_op(
                 sess, operation, instance_id,

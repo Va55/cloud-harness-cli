@@ -40,14 +40,18 @@ def _ctx(**kw):
 class TestGlobalFlagsWired:
     """#1: --dry-run, --quiet, --verbose, --all-regions must do something."""
 
-    def test_merged_dry_run_combines_global_and_command(self):
-        from harness_plugins.ec2.plugin import _merged_dry_run
+    def test_effective_dry_run_combines_yes_global_and_command(self):
+        """Safety contract: dry-run is the DEFAULT; --yes executes;
+        global --dry-run forces simulation even combined with --yes."""
+        from harness_plugins.ec2.plugin import _effective_dry_run
         _ctx(dry_run=True)
-        assert _merged_dry_run(False) is True   # global alone
-        assert _merged_dry_run(True) is True    # both
+        assert _effective_dry_run(yes=False, dry_run=False) is True  # global alone
+        assert _effective_dry_run(yes=True, dry_run=False) is True   # global beats --yes
         _ctx(dry_run=False)
-        assert _merged_dry_run(False) is False
-        assert _merged_dry_run(True) is True    # per-command alone
+        assert _effective_dry_run(yes=False, dry_run=False) is True   # default: simulate
+        assert _effective_dry_run(yes=True, dry_run=False) is False   # --yes executes
+        assert _effective_dry_run(yes=True, dry_run=True) is True    # cmd --dry-run wins
+        assert _effective_dry_run(yes=False, dry_run=True) is True
 
     def test_dry_run_passed_to_ec2_safe_op(self):
         """dry_run=True must pass DryRun=True to boto3 and treat

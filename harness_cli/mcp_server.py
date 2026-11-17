@@ -45,6 +45,14 @@ mcp = FastMCP(
                  "via the `harness` CLI, not here.",
 )
 
+# serverInfo must report the HARNESS version, not the mcp SDK's
+# (clients show this in their server list).
+try:
+    import importlib.metadata as _md
+    mcp._mcp_server.version = _md.version("cloud-harness-cli")
+except Exception:  # pragma: no cover — metadata missing in odd installs
+    pass
+
 # ─── plumbing ────────────────────────────────────────────────────
 
 async def _progress(ctx: Optional[Context], done: int, total: int) -> None:
@@ -125,9 +133,9 @@ def _result_json(result) -> dict:
          "failures": [f.__dict__ for f in result.failures],
          "warnings": [w.message for w in result.warnings]},
         default=_json_safe))
-    data["status"] = ("all_failed" if result.failures and
+    data["status"] = ("all_failed" if result.total_failure_count and
                       not result.success else
-                      "partial_failure" if result.failures else
+                      "partial_failure" if result.total_failure_count else
                       "success")
     return _truncate(data)
 

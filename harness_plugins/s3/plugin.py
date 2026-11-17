@@ -121,6 +121,8 @@ class S3Plugin(BasePlugin):
                 from harness_primitives.output import PartialResult
                 emit(PartialResult(success={bucket: info}),
                      get_ctx().get("output", "table"))
+            except typer.Exit:
+                raise  # emit() success — NOT a failure
             except Exception as e:
                 typer.echo(f"Error: {e}", err=True)
                 raise typer.Exit(2) from e
@@ -145,6 +147,8 @@ class S3Plugin(BasePlugin):
                 from harness_primitives.output import PartialResult
                 emit(PartialResult(success={bucket: check}),
                      get_ctx().get("output", "table"))
+            except typer.Exit:
+                raise  # emit() success — NOT a failure
             except Exception as e:
                 typer.echo(f"Error: {e}", err=True)
                 raise typer.Exit(2) from e
@@ -197,12 +201,23 @@ class S3Plugin(BasePlugin):
             }
 
     def bucket_info(self, session: Any, bucket: str) -> dict:
-        """Full bucket details. The client is pinned to the bucket's region."""
+        """Full bucket details. The client is pinned to the bucket's region.
+
+        A bucket that does not exist is an ERROR, not a row of
+        'unknown' fields — fabricating success here would make the
+        public-exposure story a false negative (silent wrong data is
+        worse than a clean failure).
+        """
         # 1. Get bucket region (must use us-east-1 or the session region first)
         probe = session.get_client("s3", "us-east-1")
         try:
             loc = probe.get_bucket_location(Bucket=bucket).get("LocationConstraint") or "us-east-1"
+        except probe.exceptions.NoSuchBucket:
+            raise  # let the command report the bucket as not found
         except Exception:
+            # Permission issues on GetBucketLocation degrade to the
+            # session default; the per-bucket reads below surface the
+            # real denial if there is one.
             loc = "us-east-1"
         client = session.get_client("s3", loc)
 
@@ -264,6 +279,8 @@ class S3Plugin(BasePlugin):
         probe = session.get_client("s3", "us-east-1")
         try:
             loc = probe.get_bucket_location(Bucket=bucket).get("LocationConstraint") or "us-east-1"
+        except probe.exceptions.NoSuchBucket:
+            raise  # nonexistent bucket is an error, never "is_public: False"
         except Exception:
             loc = "us-east-1"
         client = session.get_client("s3", loc)

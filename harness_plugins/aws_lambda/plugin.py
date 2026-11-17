@@ -170,10 +170,14 @@ class LambdaPlugin(BasePlugin):
             payload: Optional[str] = typer.Option(None, "--payload",
                                                    help='JSON payload, e.g. \'{"k":1}\''),
             account: Optional[str] = typer.Option(None, "--account"),
-            region: str = typer.Option(..., "--region"),
-            dry_run: bool = typer.Option(False, "--dry-run"),
+            region: Optional[str] = typer.Option(
+                None, "--region", help="Region (auto-detected if omitted)"),
+            yes: bool = typer.Option(
+                False, "--yes", help="Execute for real (default: dry-run)"),
+            dry_run: bool = typer.Option(
+                False, "--dry-run", help="Force simulation (the default)"),
         ):
-            """Invoke a Lambda function (safe op)."""
+            """Invoke a Lambda function (safe op — dry-run by default)."""
             from harness_cli.main import get_ctx
             from harness_cli.runtime import (
         build_stack,
@@ -189,8 +193,29 @@ class LambdaPlugin(BasePlugin):
             try:
                 acct = resolver.resolve(account)
                 sess = executor.session_for(acct)
-                ensure_mutable(acct)
-                effective_dry_run = bool(dry_run or get_ctx().get("dry_run"))
+                effective_dry_run = bool(
+                    dry_run or get_ctx().get("dry_run") or not yes)
+                # read_only blocks REAL executions only; dry-runs are reads
+                if not effective_dry_run:
+                    ensure_mutable(acct)
+                if region is None:
+                    from harness_cli.runtime import regions_for
+                    for r in regions_for(acct, config, sess, store):
+                        if plugin.get_resource(sess, function_name, r) is not None:
+                            region = r
+                            break
+                    if region is None:
+                        from harness_primitives.output import FailureMsg
+                        result = PartialResult()
+                        result.failures.append(FailureMsg(
+                            account_id=acct.id, service="lambda",
+                            error_code="NotFound",
+                            message=f"Function {function_name} not found in "
+                                    f"any in-scope region for account "
+                                    f"{acct.id} (pass --region explicitly)",
+                        ))
+                        emit(result, get_ctx().get("output", "table"))
+                        return
                 try:
                     data = plugin.invoke(sess, function_name, region,
                                           payload=payload,

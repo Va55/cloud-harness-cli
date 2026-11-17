@@ -50,8 +50,20 @@ class PartialResult:
     warnings: list[WarningMsg] = field(default_factory=list)
 
     @property
+    def total_failure_count(self) -> int:
+        """Failures here PLUS those nested in per-account/per-region
+        sub-results. A region-level AccessDenied inside one account's
+        sub-result is still a failure — it must not exit 0.
+        """
+        n = len(self.failures)
+        for v in self.success.values():
+            if isinstance(v, PartialResult):
+                n += v.total_failure_count
+        return n
+
+    @property
     def is_all_success(self) -> bool:
-        return len(self.failures) == 0
+        return self.total_failure_count == 0
 
     @property
     def failure_count(self) -> int:
@@ -67,7 +79,7 @@ class PartialResult:
             return 0
         if self.success_count == 0:
             return 2  # everything failed — not a "partial" result
-        return 1  # partial failure
+        return 1  # partial failure (incl. nested region failures)
 
 
 # ─── JSON safety ─────────────────────────────────────────────
@@ -172,11 +184,12 @@ def format_output(result: PartialResult, fmt: str = "table",
 
     if fmt == "json":
         return json.dumps({
-            "status": ("all_failed" if result.failures and not result.success
-                       else "partial_failure" if result.failures
+            "status": ("all_failed" if result.total_failure_count and
+                       not result.success
+                       else "partial_failure" if result.total_failure_count
                        else "success"),
             "success_count": result.success_count,
-            "failure_count": result.failure_count,
+            "failure_count": result.total_failure_count,
             "warning_count": len(result.warnings),
             "success": result.success,
             "failures": [f.__dict__ for f in result.failures],
@@ -206,11 +219,12 @@ def format_output(result: PartialResult, fmt: str = "table",
         try:
             import yaml
             return yaml.dump({
-                "status": ("all_failed" if result.failures and not result.success
-                           else "partial_failure" if result.failures
+                "status": ("all_failed" if result.total_failure_count and
+                           not result.success
+                           else "partial_failure" if result.total_failure_count
                            else "success"),
                 "success_count": result.success_count,
-                "failure_count": result.failure_count,
+                "failure_count": result.total_failure_count,
                 "success": result.success,
                 "failures": [f.__dict__ for f in result.failures],
                 "warnings": [w.message for w in result.warnings],

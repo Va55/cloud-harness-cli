@@ -10,6 +10,7 @@ Regional service (detectors are per-region).
 from typing import Any, Iterator, Optional
 
 import typer
+from botocore.exceptions import ClientError, ParamValidationError
 
 from harness_plugins.base import BasePlugin, PluginCapabilities
 
@@ -82,11 +83,11 @@ class SecurityPlugin(BasePlugin):
                                 }
                             }
                         },
-                        FindingStatisticTypes=["COUNT"],
+                        FindingStatisticTypes=["COUNT_BY_SEVERITY"],
                     )
                     stats = resp.get("FindingStatistics", {}).get("CountBySeverity", {})
                     counts[level] = sum(stats.values())
-                except Exception:
+                except (ClientError, ParamValidationError):
                     counts[level] = -1  # signal error without aborting
             yield {
                 "resource_id": f"guardduty:{detector_id[:12]}",
@@ -196,11 +197,13 @@ class SecurityPlugin(BasePlugin):
         return sec_app
 
 
-def _severity_gte(level: str) -> float:
-    """GuardDuty severity thresholds (0.1–10.0 scale)."""
+def _severity_gte(level: str) -> int:
+    """GuardDuty severity thresholds (0.1–10.0 scale, int for botocore
+    validation — floats raise ParamValidationError, which the old
+    swallow-all except silently turned into the -1 sentinel)."""
     return {
-        "LOW": 1.0,
-        "MEDIUM": 4.0,
-        "HIGH": 7.0,
-        "CRITICAL": 9.0,
-    }.get(level, 1.0)
+        "LOW": 1,
+        "MEDIUM": 4,
+        "HIGH": 7,
+        "CRITICAL": 9,
+    }.get(level, 1)

@@ -489,12 +489,16 @@ def execute_route(route_result: RouteResult) -> None:
     argv = _global_flags_from_ctx() + route_result.argv
     typer.echo(f"→ harness {' '.join(route_result.argv)}", err=True)
     try:
-        app(argv, standalone_mode=False)
+        rv = app(argv, standalone_mode=False)
     except click.exceptions.Exit as e:
         raise typer.Exit(e.exit_code) from e
     except click.exceptions.UsageError as e:
         typer.echo(f"Error: {e}", err=True)
         raise typer.Exit(2) from e
+    # standalone_mode=False makes click RETURN the exit code instead
+    # of raising Exit — a routed failure (exit 2) must not become 0.
+    if isinstance(rv, int) and rv != 0:
+        raise typer.Exit(rv)
 
 
 def ask_command(
@@ -547,14 +551,18 @@ def ask_command(
     if result.mutating and result.dry_run and not yes:
         # Mutations default to dry-run (safety model §13.3). --dry-run
         # is already in argv; tell the user what a real run looks like.
-        real = [a for a in result.argv if a != "--dry-run"]
+        real = [a for a in result.argv if a != "--dry-run"] + ["--yes"]
         typer.echo(
             "[dry-run] Mutating command — simulating. "
-            f"Real run: harness {' '.join(real)} (--yes)",
+            f"Real run: harness {' '.join(real)}",
             err=True,
         )
     elif result.mutating and yes:
-        result.argv = [a for a in result.argv if a != "--dry-run"]
+        # Safe ops dry-run by DEFAULT now — --yes must be passed
+        # through, not merely --dry-run stripped, or the routed
+        # command would silently simulate.
+        result.argv = ([a for a in result.argv if a != "--dry-run"]
+                       + ["--yes"])
         typer.echo("[--yes] Executing mutating command for real.",
                    err=True)
 

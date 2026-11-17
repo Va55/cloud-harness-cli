@@ -147,9 +147,12 @@ class CloudFrontPlugin(BasePlugin):
             paths: str = typer.Option("/*", "--paths",
                                        help="Comma-separated paths to invalidate"),
             account: Optional[str] = typer.Option(None, "--account"),
-            dry_run: bool = typer.Option(False, "--dry-run"),
+            yes: bool = typer.Option(
+                False, "--yes", help="Execute for real (default: dry-run)"),
+            dry_run: bool = typer.Option(
+                False, "--dry-run", help="Force simulation (the default)"),
         ):
-            """Create a cache invalidation (safe op)."""
+            """Create a cache invalidation (safe op — dry-run by default)."""
             from harness_cli.main import get_ctx
             from harness_cli.runtime import (
         build_stack,
@@ -165,11 +168,12 @@ class CloudFrontPlugin(BasePlugin):
             try:
                 acct = resolver.resolve(account)
                 sess = executor.session_for(acct)
-                ensure_mutable(acct)
-                path_list = [p.strip() for p in paths.split(",") if p.strip()]
                 effective_dry_run = bool(
-                    dry_run or get_ctx().get("dry_run")
-                )
+                    dry_run or get_ctx().get("dry_run") or not yes)
+                # read_only blocks REAL executions only; dry-runs are reads
+                if not effective_dry_run:
+                    ensure_mutable(acct)
+                path_list = [p.strip() for p in paths.split(",") if p.strip()]
                 try:
                     if effective_dry_run:
                         data = plugin.dry_run_simulate(

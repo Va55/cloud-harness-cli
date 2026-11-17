@@ -317,3 +317,67 @@ fields) · `scripts/bootstrap-readonly-user.py` (does Example A for
 you) · `scripts/seed-sandbox.py` (sandbox seeding incl. safe-op
 targets) · user-manual §8 (the read_only lock) · architecture.md
 (session/role assumption internals).*
+
+---
+
+## 7 · The bootstrap identity (operator account, not the harness)
+
+Everything above describes what the *harness* uses: the entry user
+`harness` (read-only) and role `HarnessAccess` (read-only). Neither
+can create IAM — deliberately. The identity that *provisions* those
+belongs to the operator and is scoped separately.
+
+| Principal | Where | Powers |
+|---|---|---|
+| `harness` | member `111111111111` | read-only plugins + `sts:AssumeRole` on `HarnessAccess` |
+| `HarnessAccess` (role) | each target account | `HarnessReadOnly` (+ `HarnessOrgsRead` in mgmt) |
+| `harness-mgmt` | management `222222222222` | **`HarnessMgmtBootstrap` only** — IAM role lifecycle, IAM read, policy simulation, self key hygiene |
+
+`HarnessMgmtBootstrap` (`infra/policies/harness-bootstrap-user.json`)
+replaced `AdministratorAccess` + `AdministratorAccess-Amplify` +
+`AccountManagementFromVercel` on 2026-11-17, applied by
+`scripts/apply-mgmt-bootstrap-scope.py` (dry-run default; it refuses
+to detach admin unless `iam:SimulateCustomPolicy` proves the new
+policy covers all 25 bootstrap actions, then self-tests role
+create/update/delete).
+
+Restore, if that user ever needs full admin again (console or any
+admin credential in the management account):
+
+```bash
+aws iam attach-user-policy --user-name harness-mgmt \
+    --policy-arn arn:aws:iam::aws:policy/AdministratorAccess
+```
+
+### Onboarding one more account
+
+```bash
+# in the target account, with a profile that may create roles:
+python3 scripts/create-harness-role.py --profile <target-admin> --yes
+# management account additionally gets the org view:
+python3 scripts/create-harness-role.py --profile <target-admin> --orgs-read --yes
+```
+
+then add the account to `config.yaml` (`role_arn` +
+`external_id` from `accounts.defaults`) and run
+`harness account list` to persist discovery — a config entry alone is
+invisible until discovery runs, because `resolve_all()` reads the
+store, not the file.
+
+### Accounts whose role does not exist yet
+
+`333333333333` (the AWS *identity delegated admin* account of a
+new-AWS org) is in `config.yaml` with
+`role_arn: arn:aws:iam::333333333333:role/HarnessAccess`, but the role
+could not be created: no API path reaches that account from the
+current credentials (nothing trusts the management account, and
+CloudFormation StackSets trusted access is not enabled on the org).
+Until `create-harness-role.py` is run there, every command against it
+reports:
+
+```
+Failures (1):
+  333333333333 [-] AccessDenied: User: arn:aws:iam::111111111111:user/harness ...
+```
+
+Other accounts remain unaffected — the failure is per-account.

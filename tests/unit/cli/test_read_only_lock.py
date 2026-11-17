@@ -137,6 +137,7 @@ class TestReadOnlyEnforcement:
                 "--config", str(conf),
                 "ec2", "stop", "i-123",
                 "--account", "prod", "--region", "eu-north-1",
+                "--yes",
             ])
         assert isinstance(result.exception, HarnessError)
         assert "READ-ONLY" in str(result.exception)
@@ -149,6 +150,7 @@ class TestReadOnlyEnforcement:
             result = runner.invoke(app, [
                 "--config", str(conf),
                 "iam", "rotate-keys", "alice", "--account", "prod",
+                "--yes",
             ])
         assert isinstance(result.exception, HarnessError)
         assert "READ-ONLY" in str(result.exception)
@@ -163,7 +165,7 @@ class TestReadOnlyEnforcement:
                 "--config", str(conf),
                 "backup", "start-backup", "arn:aws:ec2:us-east-1:1:instance/i-1",
                 "--vault", "v", "--iam-role", "r",
-                "--account", "prod",
+                "--account", "prod", "--yes",
             ])
         assert isinstance(result.exception, HarnessError)
         assert start.call_count == 0
@@ -177,7 +179,7 @@ class TestReadOnlyEnforcement:
             runner.invoke(app, [
                 "--config", str(conf),
                 "ec2", "stop", "i-123", "--account", "prod",
-                "--region", "eu-north-1",
+                "--region", "eu-north-1", "--yes",
             ])
         db = tmp_path / "audit.db"
         if db.exists():
@@ -196,10 +198,11 @@ class TestReadOnlyEnforcement:
         assert result.exit_code == 0, result.output
         assert users.call_count == 1        # reads unaffected
 
-    def test_dry_run_also_refused_for_ec2_real_ops(self, tmp_path):
-        """Even --dry-run is refused for the REAL op commands: the lock
-        is unconditional (dry-runs through `ask`/MCP simulations are
-        separate and remain available)."""
+    def test_dry_run_allowed_on_read_only_accounts(self, tmp_path):
+        """The lock's own contract (user-manual §8): reads and DRY-RUNS
+        are permitted on read_only accounts; only the real execution
+        (--yes) is refused. (Previously the lock fired even for
+        --dry-run, contradicting its error message.)"""
         conf = _config(tmp_path, True, level="business")
         with patch("harness_plugins.ec2.plugin.EC2Plugin.safe_op",
                    MagicMock()) as m:
@@ -208,8 +211,10 @@ class TestReadOnlyEnforcement:
                 "ec2", "stop", "i-123", "--account", "prod",
                 "--region", "eu-north-1", "--dry-run",
             ])
-        assert isinstance(result.exception, HarnessError)
-        assert m.call_count == 0
+        assert not isinstance(result.exception, HarnessError)
+        assert "READ-ONLY" not in result.output
+        assert m.call_count == 1                            # simulated
+        assert m.call_args.kwargs.get("dry_run") is True    # never real
 
 
 class TestRealCLIExitCode:
@@ -226,7 +231,7 @@ class TestRealCLIExitCode:
             [harness,
              "--config", str(conf),
              "ec2", "stop", "i-123", "--account", "prod",
-             "--region", "eu-north-1"],
+             "--region", "eu-north-1", "--yes"],
             capture_output=True, text=True, timeout=60)
         assert proc.returncode == 2
         assert "READ-ONLY" in proc.stderr
@@ -236,7 +241,23 @@ class TestRealCLIExitCode:
 class TestReadOnlyViaAsk:
     def test_ask_routes_but_execution_refuses(self, tmp_path):
         """A natural-language request to mutate a locked business is
-        routed — and then REFUSED by the same wall."""
+        routed; with --yes the routed command hits the same wall.
+        Without --yes it only ever simulates (dry-run default)."""
+        conf = _config(tmp_path, True, level="business")
+        with patch("harness_plugins.ec2.plugin.EC2Plugin.safe_op",
+                   MagicMock()) as m:
+            result = runner.invoke(app, [
+                "--config", str(conf),
+                "ask", "--yes",
+                "stop instance i-0abc123456789def0 in prod in eu-north-1",
+            ])
+        assert isinstance(result.exception, HarnessError)
+        assert "READ-ONLY" in str(result.exception)
+        assert m.call_count == 0
+
+    def test_ask_defaults_to_simulation_on_read_only(self, tmp_path):
+        """ask without --yes routes to the dry-run default — allowed
+        even on a locked account, and never touches AWS for real."""
         conf = _config(tmp_path, True, level="business")
         with patch("harness_plugins.ec2.plugin.EC2Plugin.safe_op",
                    MagicMock()) as m:
@@ -244,9 +265,9 @@ class TestReadOnlyViaAsk:
                 "--config", str(conf),
                 "ask", "stop instance i-0abc123456789def0 in prod in eu-north-1",
             ])
-        assert isinstance(result.exception, HarnessError)
-        assert "READ-ONLY" in str(result.exception)
-        assert m.call_count == 0
+        assert "READ-ONLY" not in result.output
+        assert m.call_count == 1                            # simulated
+        assert m.call_args.kwargs.get("dry_run") is True    # never real
 
 
 class TestReadOnlyMcp:

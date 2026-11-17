@@ -228,12 +228,12 @@ harness --all-accounts s3 audit
 # What does one instance look like?
 harness ec2 describe i-0abc123456789def0 --account prod --region eu-west-1
 
-# Stop that instance — dry-run first, always:
-harness ec2 stop i-0abc123456789def0 --region eu-west-1 --dry-run
-harness ec2 stop i-0abc123456789def0 --region eu-west-1        # real
+# Stop that instance — safe ops dry-run by default; --yes executes:
+harness ec2 stop i-0abc123456789def0 --region eu-west-1   # dry-run (the default)
+harness ec2 stop i-0abc123456789def0 --yes               # real (--region optional — auto-detected)
 
 # Rotate a user's keys (secret → 0600 file, never the screen):
-harness iam rotate-keys alice --account prod
+harness iam rotate-keys alice --account prod --yes
 # → Secret written to ~/.cache/cloud-harness/credentials/AKIA….secret (0600)
 
 # Are backups actually working? (the question that matters)
@@ -265,7 +265,7 @@ $ harness ask "show unused iam keys in prod"
 → harness iam find-unused --account prod
 
 $ harness ask "stop instance i-0abc123456789def0 in eu-west-1"
-[dry-run] Mutating command — simulating. Real run: … (--yes)
+[dry-run] Mutating command — simulating. Real run: … --yes
 → harness ec2 stop i-0abc123456789def0 --region eu-west-1 --dry-run
 
 $ harness ask "which regions are enabled for prod"
