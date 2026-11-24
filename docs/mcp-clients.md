@@ -48,7 +48,7 @@ unless you want a per-project config (`HARNESS_CONFIG`).
 
 ```bash
 pi mcp add cloud-harness-cli -- harness serve-mcp
-pi mcp list                       # → connected, 24 tools
+pi mcp list                       # → connected, 26 tools
 ```
 
 - config: `~/.pi/agent/mcp.json` (user) or `--local` for the project
@@ -63,7 +63,8 @@ pi mcp list                       # → connected, 24 tools
 {"mcpServers": {"cloud-harness-cli": {"command": "harness", "args": ["serve-mcp"]}}}
 ```
 
-✅ Verified: `cloud-harness-cli: connected, 24 tools (codemode, global)`.
+✅ Verified: `cloud-harness-cli: connected, 24 tools` (at the time of
+  writing; the surface is now 26 — verified live after Route 53).
 
 ## Hermes
 
@@ -73,7 +74,7 @@ hermes mcp test cloud-harness-cli       # connection + tool discovery
 hermes mcp list                   # → ✓ enabled
 ```
 
-- the add is interactive: it asks **"Enable all 24 tools? [Y/n/select]"**
+- the add is interactive: it asks **"Enable all 26 tools? [Y/n/select]"**
   — answer `Y` (or `select` to expose only some; `hermes mcp configure
   cloud-harness-cli` changes it later)
 - non-interactive/scripted: `printf 'Y\n' | hermes mcp add cloud-harness-cli
@@ -83,7 +84,7 @@ hermes mcp list                   # → ✓ enabled
 - remove with `hermes mcp remove cloud-harness-cli`
 
 ✅ Verified: `✓ Connected (1649ms) · ✓ Tools discovered: 24`,
-`24/24 tools enabled`.
+`26/26 tools enabled`.
 
 ## Claude Code
 
@@ -140,7 +141,7 @@ Copilot Global*, and give the command `harness` with argument
 ```
 
 Verify with **MCP: List Servers** (Command Palette) — it should show
-24 tools after connecting. On Linux/macOS a GUI-launched VS Code may
+26 tools after connecting. On Linux/macOS a GUI-launched VS Code may
 need the absolute path (see Prerequisites).
 
 ## Cursor / any other MCP client
@@ -167,7 +168,7 @@ Any client, one question is enough:
 
 > "Use the cloud-harness-cli tools: run `doctor`, then `whoami`."
 
-Expected: `doctor` reports credentials OK + 11 plugins; `whoami`
+Expected: `doctor` reports credentials OK + 12 plugins; `whoami`
 returns your ARN with source identity `harness-<user>`. The client's
 tool list should show **26** entries.
 

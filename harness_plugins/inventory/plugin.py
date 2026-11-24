@@ -36,6 +36,8 @@ SERVICE_PLAN = {
     "lambda": {"types": ["functions"], "is_global": False},
     "cloudfront": {"types": ["distributions"], "is_global": True},
     "org": {"types": ["accounts"], "is_global": True},
+    "route53": {"types": ["hosted-zones", "record-sets", "health-checks"],
+                "is_global": True},
 }
 
 

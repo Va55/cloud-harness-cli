@@ -39,7 +39,21 @@ class Route53Plugin(BasePlugin):
 
     def list_resources(self, session: Any, region: Optional[str] = None,
                        **filters) -> Iterator[dict]:
-        yield from self.list_hosted_zones(session)
+        """Inventory entry point. `type=` selects the resource kind;
+        the inventory collector calls once per type per run."""
+        kind = (filters.get("type") or "hosted-zones").lower()
+        if kind in ("hosted-zones", "zones", "hosted_zone"):
+            yield from self.list_hosted_zones(session)
+        elif kind in ("record-sets", "records", "record_sets"):
+            for zone in self.list_hosted_zones(session):
+                yield from self.list_record_sets(session, zone["resource_id"])
+        elif kind in ("health-checks", "health_checks"):
+            yield from self.list_health_checks(session)
+        else:
+            from harness_primitives.failure import FailureCategory, HarnessError
+            raise HarnessError(
+                f"unknown route53 resource type: {kind}",
+                FailureCategory.FATAL)
 
     def get_resource(self, session: Any, resource_id: str,
                      region: Optional[str] = None) -> Optional[dict]:

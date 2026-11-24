@@ -92,7 +92,7 @@ pi mcp add cloud-harness-cli -- harness serve-mcp
 # args ["serve-mcp"]
 ```
 
-Verify: the client should list 24 tools
+Verify: the client should list 26 tools
 (whoami, doctor, list_accounts, account_regions, console_url,
 ec2_*, s3_*, iam_*, vpc_list, backup_*, cost_total, safe_op_dry_run).
 
@@ -105,7 +105,7 @@ ec2_*, s3_*, iam_*, vpc_list, backup_*, cost_total, safe_op_dry_run).
 | **Local large model** (a 30B+ instruct on GPU) | best of both | needs the hardware |
 
 **Empirical floor (tested, not guessed):** a 2B-class instruct model
-with native tool-calling is sufficient for the harness — the 24 small
+with native tool-calling is sufficient for the harness — the 26 small
 typed schemas were designed for exactly that. Models without native
 tool-calling or agent tuning will fail the multi-turn loop even if
 they can emit one valid call.

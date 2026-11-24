@@ -117,3 +117,46 @@ class TestRoute53Plugin:
             zone_id = public["HostedZone"]["Id"].replace("/hostedzone/", "")
             row = Route53Plugin().get_resource(FakeSession(), zone_id)
             assert row is not None and row["name"] == "example.com"
+
+
+class TestRoute53InventoryIntegration:
+    """The inventory collector drives plugins via list_resources(type=...).
+
+    Regression: route53 was missing from SERVICE_PLAN, so
+    `harness inventory collect --services route53` warned "Unknown
+    service" and collected nothing — the plugin existed but could not
+    be inventoried.
+    """
+
+    def test_service_plan_contains_route53_as_global(self):
+        from harness_plugins.inventory.plugin import SERVICE_PLAN
+
+        assert "route53" in SERVICE_PLAN
+        plan = SERVICE_PLAN["route53"]
+        assert plan["is_global"] is True, "route53 is a global service"
+        assert set(plan["types"]) == {"hosted-zones", "record-sets",
+                                      "health-checks"}
+
+    def test_list_resources_type_dispatch(self):
+        with mock_aws():
+            client = FakeSession().get_client("route53", "us-east-1")
+            TestRoute53Plugin()._seed(client)
+            plugin = Route53Plugin()
+
+            zones = list(plugin.list_resources(FakeSession(), type="hosted-zones"))
+            assert len(zones) == 2 and zones[0]["resource_id"]
+
+            records = list(plugin.list_resources(FakeSession(), type="record-sets"))
+            assert all(r["type"] in ("A", "MX", "NS", "SOA") for r in records)
+            assert records, "record-sets via inventory must yield rows"
+
+            checks = list(plugin.list_resources(FakeSession(), type="health-checks"))
+            assert len(checks) == 1
+
+    def test_list_resources_unknown_type_raises(self):
+        with mock_aws():
+            import pytest as _pytest
+
+            with _pytest.raises(Exception) as ei:
+                list(Route53Plugin().list_resources(FakeSession(), type="nonsense"))
+            assert "unknown route53 resource type" in str(ei.value)

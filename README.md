@@ -61,7 +61,7 @@ deterministic router with no ability to invent a command.
 
 ### As a tool — the CLI
 
-Twenty-five commands across eleven plugins. Installed above, it works
+Twenty-eight commands across twelve plugins. Installed above, it works
 immediately:
 
 ```bash
@@ -119,7 +119,7 @@ Client registration — one line each:
 | VS Code | `{"servers":{"cloud-harness-cli":{"type":"stdio","command":"harness","args":["serve-mcp"]}}}` in `.vscode/mcp.json` |
 
 A reasonable first exchange: *"run doctor, then whoami"*. The client
-should report 24 tools. Configuration files, verification and a
+should report 26 tools. Configuration files, verification and a
 troubleshooting table are in **[docs/mcp-clients.md](docs/mcp-clients.md)**.
 
 ### Tool surface (the 24 MCP tools)
