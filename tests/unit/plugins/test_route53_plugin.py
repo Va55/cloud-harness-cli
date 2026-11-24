@@ -160,3 +160,29 @@ class TestRoute53InventoryIntegration:
             with _pytest.raises(Exception) as ei:
                 list(Route53Plugin().list_resources(FakeSession(), type="nonsense"))
             assert "unknown route53 resource type" in str(ei.value)
+
+
+class TestShippedIamPolicy:
+    """The shipped read policy must cover what the plugin calls.
+
+    The policy JSON (infra/policies/harness-read-policy.json) is the
+    source of truth both for apply-least-privilege.py and for the role
+    update — if it silently loses a service's actions, the plugin ships
+    but everything it calls returns AccessDenied.
+    """
+
+    def test_read_policy_covers_route53(self):
+        import json
+        from pathlib import Path
+
+        path = Path("infra/policies/harness-read-policy.json")
+        assert path.exists(), "shipped policy file missing"
+        doc = json.loads(path.read_text())
+        actions = set()
+        for stmt in doc["Statement"]:
+            if stmt.get("Sid") == "Route53Read":
+                acts = stmt["Action"]
+                actions |= {acts} if isinstance(acts, str) else set(acts)
+        needed = {"route53:ListHostedZones", "route53:ListResourceRecordSets",
+                  "route53:ListHealthChecks", "route53:GetHostedZone"}
+        assert needed <= actions, f"policy lacks: {needed - actions}"
