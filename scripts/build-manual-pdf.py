@@ -372,6 +372,8 @@ def build(out_path):
           "flow-logs · audit"],
          ["backup", "list-vaults · list-plans · list-recovery-points · "
           "list-jobs [--state FAILED] · audit · start-backup (safe op)"],
+         ["route53", "zones [--private-only] · records ZONE [--type MX] · "
+          "health-checks (read-only, global service)"],
          ["org", "list-accounts · list-ous"],
          ["cost", "by-service · total"],
          ["security", "guardduty · hub"],

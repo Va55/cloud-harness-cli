@@ -348,15 +348,20 @@ def backup_list_vaults(account: Optional[str] = None,
 def backup_list_jobs(state: Optional[Literal[
                          "COMPLETED", "FAILED", "RUNNING", "ABORTED"]] = None,
                      account: Optional[str] = None,
+                     business: Optional[str] = None,
+                     all_accounts: bool = False,
                      region: Optional[str] = None) -> dict:
-    """List AWS Backup jobs; state: COMPLETED|FAILED|RUNNING|ABORTED."""
+    """List AWS Backup jobs; state: COMPLETED|FAILED|RUNNING|ABORTED.
+
+    Pass all_accounts=True (or business=...) to sweep every account.
+    """
     from harness_plugins.backup.plugin import BackupPlugin
     valid = ("COMPLETED", "FAILED", "RUNNING", "ABORTED")
     if state and state.upper() not in valid:
         return {"error": f"state must be one of {valid}"}
     return _sweep(lambda s, r: list(BackupPlugin().list_jobs(
         s, r, state=state)),
-        account=account, business=None, all_accounts=False,
+        account=account, business=business, all_accounts=all_accounts,
         region=region)
 
 

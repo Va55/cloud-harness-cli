@@ -205,10 +205,18 @@ harness backup   list-vaults | list-plans | list-recovery-points --vault V
                  start-backup ARN --vault V --iam-role R   # safe op
 harness org      list-accounts | list-ous
 harness cost     by-service | total
+harness route53  zones [--private-only] | records ZONE_OR_NAME [--type MX]
+                 health-checks                        # read-only, global
 harness security guardduty | hub
 harness inventory collect [--services ec2,s3,iam] | summarize | show
                  search [--tag Name=web] | export [--format csv]
 ```
+
+Route 53 is a **global** service — no region fan-out, and `zones` takes
+`--private-only` for private hosted zones only. `records` accepts a zone ID
+(`Z...`) or a zone name (`example.com`), with `--type` to filter (A, AAAA,
+CNAME, MX, TXT, …). Read-only by design: DNS changes stay with a human
+reading the diff.
 
 Every read command accepts `--account`, `--all-accounts`, and
 `--output json` (plus `--business` globally).
