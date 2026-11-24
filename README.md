@@ -32,7 +32,7 @@ harness doctor                               # credentials, regions, plugins
 |  | **The tool — `harness`** | **The server — `harness serve-mcp`** |
 |---|---|---|
 | Who drives it | you: terminal, script, cron | your AI client |
-| How you talk to it | commands, flags, `--output json` | 24 typed tools over JSON-RPC (stdio) |
+| How you talk to it | commands, flags, `--output json` | 26 typed tools over JSON-RPC (stdio) |
 | Additional setup | none | one registration line in the client |
 | Can it change AWS | yes — safe operations, dry-run by default, `--yes` executes | **no** — read and simulate only |
 | Output | tables or JSON, real exit codes | typed JSON, 50-row cap |
@@ -51,7 +51,7 @@ as a tool or as an assistant depends entirely on what you attach to it:
 |---|---|---|---|
 | **Plain CLI** | you — terminal, script, cron | yes | yes (`--yes`) |
 | **`harness ask "…"`** | you, in prose | **yes** — a router that can only select commands which exist, and refuses when arguments are missing | yes (`--yes`; dry-run by default) |
-| **CLI + MCP client with a model** | the model, through 24 typed tools | no — the model chooses | **no** — read and dry-run only |
+| **CLI + MCP client with a model** | the model, through 26 typed tools | no — the model chooses | **no** — read and dry-run only |
 
 Attaching an MCP client that has an LLM is what turns the same tool
 into an AWS assistant: prose in, tool calls out. Note the direction —
@@ -84,10 +84,11 @@ harness ask "show unused iam keys in prod"
 #   → harness iam find-unused --account prod
 ```
 
-Global flags, before or after the subcommand: `--business`,
-`--account`, `--all-accounts`, `--all-regions`, `--region`,
-`--output table|json`, `--dry-run`, `--quiet`, `--verbose`,
-`--profile`, `--role`, `--external-id`, `--refresh`.
+Global flags go **before** the subcommand — after it, only that
+command's own options are accepted: `--business`, `--account`,
+`--all-accounts`, `--all-regions`, `--region`, `--output table|json`,
+`--dry-run`, `--quiet`, `--verbose`, `--profile`, `--role`,
+`--external-id`, `--refresh`.
 
 ### As a server — MCP
 
@@ -104,7 +105,8 @@ dedicated virtual environment, the CLI on a path, the `[mcp]` extra, and a
 config template (it never touches `~/.aws` or an existing config).
 `--dry-run` shows the plan first.
 
-The MCP SDK is an optional extra: `pip install 'cloud-harness-cli[mcp]'`.
+The MCP SDK is an optional extra — install it from this checkout with
+`pip install -e '.[mcp]'` (or let `./scripts/install.sh` do it).
 The pin excludes SDK 2.x, whose import path this code does not use.
 
 Client registration — one line each:
@@ -128,6 +130,7 @@ troubleshooting table are in **[docs/mcp-clients.md](docs/mcp-clients.md)**.
 | Compute, storage, network | `ec2_list_instances` · `ec2_describe` · `s3_list_buckets` · `s3_bucket_info` · `vpc_list` |
 | Identity hygiene | `iam_list_users` · `iam_find_unused` · `iam_check_mfa` |
 | Serverless and edge | `lambda_list_functions` · `cloudfront_list_distributions` |
+| DNS | `route53_list_zones` · `route53_list_records` |
 | Security posture | `security_guardduty_findings` · `security_hub_status` |
 | Organization | `org_list_accounts` · `org_list_ous` (management account) |
 | Backups, cost, inventory | `backup_list_vaults` · `backup_list_jobs` · `cost_total` · `inventory_summarize` |
@@ -172,7 +175,7 @@ ability to mutate.
 - **Every action attributable.** AssumeRole carries an ExternalId and
   requests `SourceIdentity`; where the organization blocks it, the
   harness falls back to session-name attribution rather than failing.
-- **Plugins, not monolith.** Eleven service plugins behind a
+- **Plugins, not monolith.** Twelve service plugins behind a
   capability-based interface, loaded through entry points.
 - **One capability set, two surfaces.** The CLI and the MCP server call
   the same plugin methods; the MCP surface is the stricter subset.
@@ -221,9 +224,9 @@ CLI immediately; exposing it to a model is a separate, considered step.
 role ARNs, ExternalIds, `read_only` flags. Credentials never live in
 this file: profiles, SSO or AssumeRole only.
 
-```bash
-harness init-db          # local store: accounts, inventory snapshots, audit trail
-```
+The local store — accounts, inventory snapshots, audit trail — is a
+SQLite database created and migrated automatically on the first
+command; there is no init step.
 
 See [`docs/architecture.md`](docs/architecture.md) for internals and
 [`docs/aws-reference.md`](docs/aws-reference.md) for the AWS service
@@ -237,6 +240,7 @@ reference.
 | EC2 | instances, images | start / stop |
 | S3 | buckets, encryption, policy, ACL, PAB | — |
 | CloudFront | distributions | cache invalidation |
+| Route 53 | hosted zones, record sets, health checks (global) | — |
 | Lambda | functions, configuration | invocation |
 | VPC | VPCs, subnets, IGW/NAT, NACLs, routes, endpoints, flow logs | — |
 | Organizations | accounts, roots, OUs (management account) | — |
@@ -267,6 +271,7 @@ Out of scope by design: provisioning, deletion, drift management
 | Document | For |
 |---|---|
 | [docs/user-manual.md](docs/user-manual.md) | every command, with live-verified output |
+| [docs/audit-playbooks.md](docs/audit-playbooks.md) | guided audit journeys — which commands, in which order, how to read the output |
 | [docs/mcp-clients.md](docs/mcp-clients.md) | wiring Pi, Hermes, Claude Code, VS Code |
 | [docs/ai-interface-guide.md](docs/ai-interface-guide.md) | which interface, which model, data governance |
 | [docs/harness-needed_aws-roles.md](docs/harness-needed_aws-roles.md) | IAM policies for each plugin, worked examples |

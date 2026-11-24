@@ -69,7 +69,7 @@ Why it contains no LLM (deliberately):
 
 ## With an LLM — the MCP server
 
-`harness serve-mcp` exposes 24 typed tools over stdio (read-only +
+`harness serve-mcp` exposes 26 typed tools over stdio (read-only +
 dry-run simulation only; **real mutations are impossible via MCP in
 v1 — execution stays in the CLI**). The client brings the LLM:
 

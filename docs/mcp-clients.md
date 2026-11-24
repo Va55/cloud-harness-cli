@@ -1,7 +1,7 @@
 # Using the harness MCP server from MCP clients
 
 *Copy-paste setup for Pi, Hermes, Claude Code and VS Code (plus any
-other MCP client). One stdio server, 24 typed tools, read-only +
+other MCP client). One stdio server, 26 typed tools, read-only +
 dry-run only.*
 
 ---
@@ -12,13 +12,13 @@ dry-run only.*
 harness serve-mcp          # stdio, JSON-RPC, no port, no daemon
 ```
 
-- **24 tools**: whoami, doctor, list_accounts, account_regions,
+- **26 tools**: whoami, doctor, list_accounts, account_regions,
   console_url, ec2_list_instances/describe, s3_list_buckets/bucket_info,
   iam_list_users/find_unused/check_mfa, vpc_list, backup_list_vaults/
   list_jobs, cost_total, lambda_list_functions,
   security_guardduty_findings/hub_status, org_list_accounts/ous,
   cloudfront_list_distributions, inventory_summarize,
-  safe_op_dry_run
+  route53_list_zones, route53_list_records, safe_op_dry_run
 - **read + simulate only** — real mutations are impossible over MCP
   (execution stays in the CLI with `--yes`). The `read_only` business
   lock applies on top of that
@@ -169,7 +169,7 @@ Any client, one question is enough:
 
 Expected: `doctor` reports credentials OK + 11 plugins; `whoami`
 returns your ARN with source identity `harness-<user>`. The client's
-tool list should show **24** entries.
+tool list should show **26** entries.
 
 ---
 

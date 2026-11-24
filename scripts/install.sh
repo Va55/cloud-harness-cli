@@ -10,7 +10,6 @@
 #   ./scripts/install.sh --prefix DIR       install under DIR (default ~/.local/share/cloud-harness-cli)
 #   ./scripts/install.sh --from-git URL     install from a git ref instead of this checkout
 #   ./scripts/install.sh --no-mcp           CLI only, skip the MCP server dependency
-#   ./scripts/install.sh --init-db          also create the local store
 #   ./scripts/install.sh --force            replace an existing venv / config template
 #
 # Exits non-zero on failure. Safe to re-run.
@@ -23,7 +22,6 @@ PREFIX="${CLOUD_HARNESS_PREFIX:-$HOME/.local/share/cloud-harness-cli}"
 FROM_GIT=""
 WITH_MCP=1
 DRY_RUN=0
-INIT_DB=0
 FORCE=0
 
 say()  { printf '\033[1;36m»\033[0m %s\n' "$*"; }
@@ -35,11 +33,10 @@ while [ $# -gt 0 ]; do
     case "$1" in
         --dry-run)  DRY_RUN=1 ;;
         --no-mcp)   WITH_MCP=0 ;;
-        --init-db)  INIT_DB=1 ;;
         --force)    FORCE=1 ;;
         --prefix)   shift; PREFIX="${1:?--prefix needs a directory}" ;;
         --from-git) shift; FROM_GIT="${1:?--from-git needs a URL}" ;;
-        -h|--help)  sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        -h|--help)  sed -n '2,/^# Exits/p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
         *)          die "unknown option: $1 (try --help)" ;;
     esac
     shift
@@ -126,13 +123,10 @@ else
     run chmod 600 "$CONFIG_FILE"
 fi
 
-# ── 6. Optional: local store ────────────────────────────────────────────
-if [ "$INIT_DB" = "1" ]; then
-    say "Initialising the local store…"
-    run "$BINDIR/harness" init-db || warn "init-db failed — will be created on first use"
-else
-    say "Local store: not created (pass --init-db to create it now)"
-fi
+# ── 6. Local store ──────────────────────────────────────────────────────
+# No init step: the SQLite store is created and migrated on the first
+# harness command (see harness_cli/runtime.py build_stack).
+say "Local store: created automatically on first command (no init step)"
 
 # ── 7. Verify ───────────────────────────────────────────────────────────
 if [ "$DRY_RUN" = "1" ]; then

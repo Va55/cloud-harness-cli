@@ -460,6 +460,43 @@ def cloudfront_list_distributions(account: Optional[str] = None,
 
 
 @mcp.tool()
+async def route53_list_zones(account: Optional[str] = None,
+                            business: Optional[str] = None,
+                            all_accounts: bool = False,
+                            private_only: bool = False) -> dict:
+    """Hosted DNS zones (name, ID, private/public, record count).
+
+    private_only: True lists only private zones.
+    """
+    from harness_plugins.route53.plugin import Route53Plugin
+    return await asyncio.to_thread(
+        _sweep,
+        lambda s, r: list(Route53Plugin().list_hosted_zones(
+            s, private_only=True if private_only else None)),
+        account=account, business=business, all_accounts=all_accounts,
+        region="us-east-1")
+
+
+@mcp.tool()
+async def route53_list_records(zone: str,
+                              record_type: Optional[str] = None,
+                              account: Optional[str] = None,
+                              business: Optional[str] = None,
+                              all_accounts: bool = False) -> dict:
+    """Record sets in a hosted zone. zone: ID (Z…) or name (example.com).
+
+    record_type: optional filter (A, AAAA, CNAME, MX, TXT, …).
+    """
+    from harness_plugins.route53.plugin import Route53Plugin
+    return await asyncio.to_thread(
+        _sweep,
+        lambda s, r: list(Route53Plugin().list_record_sets(
+            s, zone, record_type=record_type)),
+        account=account, business=business, all_accounts=all_accounts,
+        region="us-east-1")
+
+
+@mcp.tool()
 def inventory_summarize(account: Optional[str] = None) -> dict:
     """Resource counts by account/region/service from the latest
     collected snapshot (LOCAL store — no AWS call).

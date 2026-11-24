@@ -28,6 +28,7 @@ PLUGIN_MODULES = {
     "SecurityPlugin": "harness_plugins.security.plugin",
     "OrgPlugin": "harness_plugins.org.plugin",
     "CloudFrontPlugin": "harness_plugins.cloudfront.plugin",
+    "Route53Plugin": "harness_plugins.route53.plugin",
     "LambdaPlugin": "harness_plugins.aws_lambda.plugin",
 }
 
@@ -66,14 +67,14 @@ def test_every_mcp_plugin_call_exists() -> None:
 
 
 def test_mcp_server_imports_and_registers_24_tools() -> None:
-    """The tool surface is live-importable and has exactly 24 tools."""
+    """The tool surface is live-importable and has exactly 26 tools."""
     import harness_cli.mcp_server as mcp_server
 
     server = mcp_server.mcp
     tools = server._tool_manager.list_tools()  # FastMCP internal API
     names = sorted(t.name for t in tools)
 
-    assert len(names) == 24, f"expected 24 MCP tools, got {len(names)}"
+    assert len(names) == 26, f"expected 26 MCP tools, got {len(names)}"
     assert "cost_total" in names
     # the previously broken tool must be among them
     assert "safe_op_dry_run" in names

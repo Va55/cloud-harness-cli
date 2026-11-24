@@ -84,6 +84,7 @@ actually use; nothing else is needed.
 | **org** | list-accounts, list-ous (mgmt account only) | `organizations:ListAccounts`, `organizations:ListRoots`, `organizations:ListOrganizationalUnitsForParent`, `organizations:DescribeAccount` |
 | **cost** | total, by-service | `ce:GetCostAndUsage` (+ Cost Explorer must be **activated** in the billing account) |
 | **security** | guardduty, hub | `guardduty:ListDetectors`, `guardduty:GetFindingsStatistics`, `securityhub:DescribeHub`, `securityhub:GetFindingsStatistics` (detectors/hub must exist — enablement is out of scope) |
+| **route53** | zones, records, health-checks (global service) | `route53:ListHostedZones`, `route53:ListHostedZonesByName`, `route53:GetHostedZone`, `route53:ListResourceRecordSets`, `route53:ListHealthChecks` |
 | **backup** | list-vaults, list-plans, list-recovery-points, list-jobs | `backup:ListVaults`, `backup:DescribeBackupVault`, `backup:ListBackupPlans`, `backup:ListRecoveryPointsByBackupVault`, `backup:ListBackupJobs` |
 | **inventory** | collect, summarize, show, search, export | union of the read actions of every service collected (it fans out through the other plugins' list methods) |
 
@@ -100,6 +101,7 @@ actually use; nothing else is needed.
       "ec2:Describe*",
       "s3:ListAllMyBuckets", "s3:ListBucket", "s3:GetBucket*",
       "cloudfront:List*", "cloudfront:Get*",
+      "route53:List*", "route53:Get*",
       "lambda:List*", "lambda:Get*",
       "organizations:List*", "organizations:Describe*",
       "ce:GetCostAndUsage",

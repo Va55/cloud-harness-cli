@@ -37,8 +37,8 @@ def test_mcp_extra_is_declared_with_pin():
     assert "<2" in text, "the 2.x MCP SDK does not provide mcp.server.fastmcp"
 
 
-def test_server_imports_and_registers_24_tools():
+def test_server_imports_and_registers_26_tools():
     """With the SDK present the surface is intact."""
     from harness_cli.mcp_server import mcp
 
-    assert len(mcp._tool_manager.list_tools()) == 24
+    assert len(mcp._tool_manager.list_tools()) == 26

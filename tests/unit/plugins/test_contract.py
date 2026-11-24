@@ -21,10 +21,11 @@ def registry():
 
 
 class TestRegistryDiscovery:
-    def test_all_eleven_plugins_load(self, registry):
+    def test_all_plugins_load(self, registry):
         expected = {
             "iam", "ec2", "s3", "cloudfront", "lambda",
             "org", "vpc", "cost", "security", "inventory", "backup",
+            "route53",
         }
         assert set(registry.available_plugins) == expected
 

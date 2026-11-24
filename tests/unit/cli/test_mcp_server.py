@@ -74,6 +74,7 @@ class TestToolSurface:
             "lambda_list_functions", "security_guardduty_findings",
             "security_hub_status", "org_list_accounts", "org_list_ous",
             "cloudfront_list_distributions", "inventory_summarize",
+            "route53_list_zones", "route53_list_records",
             "safe_op_dry_run",
         }
         assert tools == expected, (tools ^ expected)

@@ -305,13 +305,14 @@ data-governance trade-offs — see **docs/ai-interface-guide.md** (the
 consolidated with/without-LLM decision guide). Per-client setup
 (Pi, Hermes, Claude Code, VS Code): **docs/mcp-clients.md**.*
 
-24 typed tools (no free-form params): whoami, doctor, list_accounts,
+26 typed tools (no free-form params): whoami, doctor, list_accounts,
 account_regions, console_url, ec2_list_instances/describe,
 s3_list_buckets/bucket_info, iam_list_users/find_unused/check_mfa,
 vpc_list, backup_list_vaults/list_jobs, cost_total,
 lambda_list_functions, security_guardduty_findings/security_hub_status,
 org_list_accounts/list_ous (management account only),
 cloudfront_list_distributions, inventory_summarize (local snapshot),
+route53_list_zones/list_records (DNS),
 and `safe_op_dry_run` (operation, resource_id) — **simulation only**:
 an LLM-facing server cannot trigger real mutations in v1; execution
 stays in the CLI (`--yes`). Results are capped at 50 rows. MCP-origin

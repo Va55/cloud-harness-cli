@@ -60,6 +60,7 @@ vpc = "harness_plugins.vpc.plugin:VPCPlugin"
 backup = "harness_plugins.backup.plugin:BackupPlugin"
 cost = "harness_plugins.cost.plugin:CostPlugin"
 security = "harness_plugins.security.plugin:SecurityPlugin"
+route53 = "harness_plugins.route53.plugin:Route53Plugin"
 inventory = "harness_plugins.inventory.plugin:InventoryPlugin"
 
 # Non-Python files that must ship: the SQL migrations are read at runtime,

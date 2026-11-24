@@ -120,7 +120,10 @@ class OrgPlugin(BasePlugin):
             """List all accounts in the organization."""
             from harness_cli.main import get_ctx
             from harness_cli.runtime import (
-                build_stack, emit, get_runtime, resolve_accounts,
+                build_stack,
+                emit,
+                get_runtime,
+                resolve_accounts,
             )
             from harness_primitives.output import FailureMsg, PartialResult
 
@@ -154,7 +157,10 @@ class OrgPlugin(BasePlugin):
             """List the root and all OUs (recursive)."""
             from harness_cli.main import get_ctx
             from harness_cli.runtime import (
-                build_stack, emit, get_runtime, resolve_accounts,
+                build_stack,
+                emit,
+                get_runtime,
+                resolve_accounts,
             )
             from harness_primitives.output import FailureMsg, PartialResult
 

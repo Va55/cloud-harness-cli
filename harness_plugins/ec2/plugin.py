@@ -200,7 +200,7 @@ class EC2Plugin(BasePlugin):
                         message=str(err.get("Message", e))[:300],
                     ))
                     emit(result, get_ctx().get("output", "table"))
-                    raise typer.Exit(result.exit_code)
+                    raise typer.Exit(result.exit_code) from None
                 if inst is None:
                     typer.echo(f"Instance {instance_id} not found in {region}", err=True)
                     raise typer.Exit(1)
